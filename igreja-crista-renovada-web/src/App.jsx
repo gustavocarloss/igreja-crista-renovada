@@ -29,10 +29,10 @@ const Login = ({ onLogin, onShowRegister }) => {
   }
 
   return (
-    <div className="login-container">
+    <div className="login-container1">
       <div className="login-card">
         <img src="/icr-logo.png" alt="Igreja Cristã Renovada" className="login-logo" />
-        <h1>Igreja Cristã Renovada</h1>
+        <h1>Igreja Cristã Renovada teste</h1>
         <p className="verse">"Tomando o pão, deu graças, partiu-o e o deu aos discípulos" - Lucas 22:19</p>
         
         <form onSubmit={handleSubmit}>
