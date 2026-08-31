@@ -1,0 +1,48 @@
+/* BottomNav Component Styles */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  height: 72px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 10px 25px -5px var(--shadow-color);
+  border: 1px solid var(--border-color);
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: #0c326e;
+}
+
+.nav-item.active .nav-icon svg {
+  stroke: #0c326e;
+  stroke-width: 2.5px;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

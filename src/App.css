@@ -1,0 +1,155 @@
+/* Design System - Igreja Cristã Renovada */
+:root {
+  --primary-navy: #0c326e;
+  --secondary-navy: #164282;
+  
+  /* Cores de contraste baseadas no prata/azul-cinza do logotipo */
+  --accent-color: #8fa9c4;
+  --accent-gold: var(--accent-color); /* compatibilidade */
+  --accent-soft: #eef3f9;
+  
+  --bg-main: #f5f8fc;
+  --bg-card: #ffffff;
+  --bg-card-rgb: 255, 255, 255;
+  --warm-white: var(--bg-main); /* compatibilidade */
+  
+  --text-main: #14233c;
+  --text-muted: #647d9c;
+  --white: #ffffff;
+  
+  --success: #10b981;
+  --danger: #ef4444;
+  --border-color: #e2eaf4;
+  --shadow-color: rgba(12, 50, 110, 0.08);
+  
+  /* Shadows & Radius */
+  --shadow-sm: 0 1px 2px 0 var(--shadow-color);
+  --shadow-md: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -2px var(--shadow-color);
+  --shadow-lg: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  /* Gradients */
+  --grad-navy: linear-gradient(135deg, #0c326e 0%, #164282 100%);
+  --grad-accent: linear-gradient(135deg, #8fa9c4 0%, #b0c2de 100%);
+  --grad-gold: var(--grad-accent); /* compatibilidade */
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--warm-white);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Navigation & Buttons --- */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-navy);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s;
+}
+
+.back-btn:hover {
+  opacity: 0.9;
+  transform: translateX(-2px);
+}
+
+/* --- Layout Principal --- */
+.page {
+  flex: 1;
+  padding: 0 24px 110px 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.top-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary-navy);
+  color: #FFFFFF;
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.page-header {
+  margin-bottom: 32px;
+  padding-top: 20px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary-navy);
+  letter-spacing: -0.04em;
+}
+
+.page-header p {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.secao-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin-bottom: 16px;
+}
+
+textarea {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}

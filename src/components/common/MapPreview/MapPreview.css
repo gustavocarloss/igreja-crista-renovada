@@ -1,0 +1,32 @@
+/* MapPreview Component Styles */
+
+.map-preview-static {
+  margin: 16px 0 24px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.map-preview-container {
+  margin-top: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  background: var(--accent-soft);
+}
+
+.map-preview-container iframe {
+  filter: grayscale(0.2) contrast(1.1);
+  display: block;
+}
+
+.map-hint {
+  padding: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  font-weight: 500;
+}

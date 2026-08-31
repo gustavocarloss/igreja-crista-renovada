@@ -1,0 +1,132 @@
+/* Registro Component Styles */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--grad-navy);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: var(--accent-color);
+  filter: blur(150px);
+  opacity: 0.15;
+  top: -100px;
+  right: -100px;
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 48px 32px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  z-index: 1;
+}
+
+.login-logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  border: 4px solid var(--border-color);
+}
+
+.login-card h1 {
+  color: var(--primary-navy);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+}
+
+.verse {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+  margin-bottom: 32px;
+  line-height: 1.6;
+  padding: 0 10px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-card input {
+  padding: 16px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  transition: all 0.2s;
+  color: var(--text-main);
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.login-btn {
+  background: #0c326e;
+  color: white;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 8px;
+}
+
+.login-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-switch {
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.secondary-btn {
+  background: none;
+  border: none;
+  color: #0c326e;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 4px 8px;
+}
+
+/* Accessibility: visually hidden helper class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

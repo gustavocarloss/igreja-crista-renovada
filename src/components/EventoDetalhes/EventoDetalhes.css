@@ -1,0 +1,258 @@
+/* EventoDetalhes Component Styles */
+
+.detalhes-card {
+  background: var(--bg-card);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.detalhes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.detalhes-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.live-badge {
+  background: var(--danger);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.detalhe-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.detalhe-row.no-icon {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.detalhe-icon {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  background: var(--accent-soft);
+  color: var(--primary-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.detalhe-content label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.detalhe-content p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.descricao-texto {
+  font-weight: 400 !important;
+  line-height: 1.6;
+  color: var(--text-main) !important;
+}
+
+.link-transmissao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent-soft);
+  color: var(--primary-navy);
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 24px;
+  transition: transform 0.2s;
+}
+
+.link-transmissao:active {
+  transform: scale(0.98);
+}
+
+.detalhes-footer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.maps-link {
+  display: inline-flex;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #164282;
+  text-decoration: underline;
+}
+
+.maps-link:hover {
+  color: #0c326e;
+}
+
+.presenca-confirmada-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.presenca-confirmada-texto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.cancelar-presenca-link {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.cancelar-presenca-link:hover {
+  color: #b91c1c;
+}
+
+.cancelar-presenca-btn-full {
+  width: 100%;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelar-presenca-btn-full:hover {
+  background: #fef2f2;
+  box-shadow: var(--shadow-sm);
+}
+
+.confirmar-presenca-btn {
+  width: 100%;
+  padding: 18px;
+  background: var(--grad-navy);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.confirmar-presenca-btn.confirmado {
+  background: var(--success);
+  cursor: pointer;
+}
+
+.confirmar-presenca-btn.confirmado:hover {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.footer-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+.check-icon {
+  margin-right: 8px;
+}
+
+.attendees-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.attendees-section label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+}
+
+.attendees-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.attendee-badge {
+  background: var(--accent-soft);
+  color: var(--text-main);
+  padding: 6px 12px 6px 6px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendee-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background-size: cover;
+  background-position: center;
+}
+
+.no-attendees {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+}

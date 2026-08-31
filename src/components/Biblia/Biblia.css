@@ -1,0 +1,255 @@
+/* Biblia Component Styles */
+
+.loading-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.biblia-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background: var(--bg-main);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.biblia-header-nav h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.leitura-header-center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.capitulo-nav-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-arrow-btn {
+  background: var(--primary-navy);
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(12, 50, 110, 0.3);
+}
+
+.nav-arrow-btn:hover:not(:disabled) {
+  transform: scale(1.1) translateY(-2px);
+  background: #092654;
+  box-shadow: 0 6px 16px rgba(12, 50, 110, 0.4);
+}
+
+.nav-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.back-btn-biblia {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.back-btn-biblia:hover {
+  background: var(--accent-soft);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.capitulos-secao {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+.instrucao {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.capitulos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 12px;
+}
+
+.capitulo-btn {
+  background: var(--accent-soft);
+  border: 1px solid var(--border-color);
+  aspect-ratio: 1;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capitulo-btn:hover {
+  background: var(--accent-gold);
+  color: white;
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.leitura-page {
+  background: var(--bg-main);
+}
+
+.leitura-container {
+  background: var(--bg-card);
+  padding: 32px 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 32px;
+  border: 1px solid var(--border-color);
+}
+
+.versiculos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.versiculo-item {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.8;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.v-num {
+  color: var(--accent-gold);
+  font-weight: 800;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.v-text {
+  font-weight: 400;
+}
+
+.leitura-capitulo-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  gap: 16px;
+}
+
+.capitulo-btn-nav {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid var(--primary-navy);
+  color: var(--primary-navy);
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.capitulo-btn-nav:hover:not(:disabled) {
+  background: var(--primary-navy);
+  color: white;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 16px rgba(12, 50, 110, 0.3);
+}
+
+.capitulo-btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.busca-container {
+  width: 100%;
+}
+
+.busca-input {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+  font-size: 16px;
+  margin-bottom: 32px;
+}
+
+.livros-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.livro-item {
+  background: var(--bg-card);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.livro-item:active {
+  transform: scale(0.97);
+  border-color: var(--accent-color);
+}
