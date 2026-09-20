@@ -45,7 +45,7 @@ export function AppProvider({ children }) {
     try {
       const [attData, userData] = await Promise.all([
         attendanceService.fetchAllAttendances(),
-        fetch('https://rhtpvuwketpdugrqgkjb.supabase.co/rest/v1/user', {
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user`, {
           headers: supabaseHeaders
         }).then(r => r.json())
       ])
@@ -172,7 +172,7 @@ export function AppProvider({ children }) {
       }
 
       fetchAttendeesList()
-      setToken('sb_publishable__KYRgCYXo50q1HG3xTgZHQ_DCGwv-_C') // You might want to update this to the real auth token eventually
+      setToken(import.meta.env.VITE_SUPABASE_KEY) // You might want to update this to the real auth token eventually
     } catch (err) {
       if (
         (err.message && err.message.includes('Invalid login')) || 
