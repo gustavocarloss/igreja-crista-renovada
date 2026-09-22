@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
+import { useNavigate } from 'react-router-dom'
 import './CalendarioView.css'
 
 /**
  * Componente de visualização do calendário mensal e programação integrada.
  */
 export default function CalendarioView() {
-  const { eventos, setSelectedEvent, setCurrentPage, setPreviousPage } = useAppContext()
+  const { eventos, setSelectedEvent } = useAppContext()
+  const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate()
@@ -46,11 +48,10 @@ export default function CalendarioView() {
   const handleDayClick = (day) => {
     const dayEvents = getEventsForDay(day)
     if (dayEvents.length === 1) {
-      setPreviousPage('calendario')
       setSelectedEvent(dayEvents[0])
-      setCurrentPage('detalhes')
+      navigate('/detalhes')
     } else if (dayEvents.length > 1) {
-      setCurrentPage('home')
+      navigate('/')
     }
   }
 
@@ -109,7 +110,7 @@ export default function CalendarioView() {
           })
           .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
           .map(evento => (
-            <div key={evento.id} className="agenda-mini-card" onClick={() => { setPreviousPage('calendario'); setSelectedEvent(evento); setCurrentPage('detalhes') }} role="button">
+            <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
               <div className="mini-date-box">
                 <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
                 <span className="mini-month">{monthNames[month].substring(0,3)}</span>

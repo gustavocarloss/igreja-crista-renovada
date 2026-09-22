@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, createContext, useContext, useEffect } from 'react'
-import { authService, eventService, attendanceService, supabaseHeaders } from '../services/api'
+import { authService, eventService, attendanceService, supabaseHeaders, supabase } from '../services/api'
 import { extractLocalDateAndTime } from '../utils/date'
 
 const AppContext = createContext()
@@ -65,43 +65,55 @@ export function AppProvider({ children }) {
     }
   }
 
-  // Auto-login do usuário persistido
-  useEffect(() => {
-    const expiresAt = localStorage.getItem('churchUserExpires')
-    if (expiresAt && Date.now() > parseInt(expiresAt)) {
-      // Sessão expirou
-      localStorage.removeItem('churchUser')
-      localStorage.removeItem('churchUserExpires')
-      localStorage.removeItem('churchUserToken')
-      return
-    }
-
-    const savedUser = localStorage.getItem('churchUser')
-    if (savedUser) {
-      // Renova a expiração caso tenha sido feito login temporário (inactivity timeout)
-      if (expiresAt) {
-        localStorage.setItem('churchUserExpires', (Date.now() + 30 * 60 * 1000).toString())
-      }
-
-      const parsedUser = JSON.parse(savedUser)
-      setUser(parsedUser)
+  const fetchUserProfile = async (authUserId) => {
+    try {
+      const { data: profile } = await supabase
+        .from('user')
+        .select('*')
+        .eq('auth_user_id', authUserId)
+        .single()
       
-      const fetchAttendances = async () => {
-        try {
-          const attData = await attendanceService.fetchUserAttendances(parsedUser.id)
-          const confirmedIds = attData.map(att => att.meeting_id)
-          const updatedUser = { ...parsedUser, eventosConfirmados: confirmedIds }
-          setUser(updatedUser)
-          localStorage.setItem('churchUser', JSON.stringify(updatedUser))
-        } catch (err) {
-          console.error('Erro ao buscar presenças', err)
-        }
+      if (profile) {
+        const attData = await attendanceService.fetchUserAttendances(profile.id)
+        const confirmedIds = attData.map(att => att.meeting_id)
+        setUser({
+          id: profile.id,
+          nome: profile.name,
+          email: profile.email,
+          role: profile.role || 'user',
+          avatar_url: profile.avatar_url || null,
+          eventosConfirmados: confirmedIds
+        })
       }
-      fetchAttendances()
+    } catch (err) {
+      console.error('Erro ao buscar perfil completo', err)
     }
-    
-    const savedToken = localStorage.getItem('churchUserToken')
-    if (savedToken) setToken(savedToken)
+  }
+
+  // Gerenciamento de Sessão Nativo do Supabase
+  useEffect(() => {
+    // Verifica sessão atual ao carregar
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchUserProfile(session.user.id)
+        setToken(session.access_token)
+      } else {
+        setUser(null)
+      }
+    })
+
+    // Fica ouvindo mudanças de auth (login, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchUserProfile(session.user.id)
+        setToken(session.access_token)
+      } else {
+        setUser(null)
+        setToken(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   // Carregar eventos e presenças na inicialização
@@ -162,17 +174,9 @@ export function AppProvider({ children }) {
       }
 
       setUser(newUser)
-      localStorage.setItem('churchUser', JSON.stringify(newUser))
       
-      if (!rememberMe) {
-        const expiresAt = Date.now() + 30 * 60 * 1000
-        localStorage.setItem('churchUserExpires', expiresAt.toString())
-      } else {
-        localStorage.removeItem('churchUserExpires')
-      }
-
       fetchAttendeesList()
-      setToken(import.meta.env.VITE_SUPABASE_KEY) // You might want to update this to the real auth token eventually
+      // O token agora é atualizado automaticamente pelo onAuthStateChange do Supabase
     } catch (err) {
       if (
         (err.message && err.message.includes('Invalid login')) || 
@@ -208,7 +212,6 @@ export function AppProvider({ children }) {
         eventosConfirmados: [...user.eventosConfirmados, eventoId]
       }
       setUser(updatedUser)
-      localStorage.setItem('churchUser', JSON.stringify(updatedUser))
       fetchAttendeesList()
       showMessage('Presença confirmada com sucesso!', 'success')
     } catch {
@@ -241,7 +244,6 @@ export function AppProvider({ children }) {
       await authService.updateUser(user.id, { avatar_url: base64Image })
       const updatedUser = { ...user, avatar_url: base64Image }
       setUser(updatedUser)
-      localStorage.setItem('churchUser', JSON.stringify(updatedUser))
       showMessage('Foto de perfil atualizada com sucesso!', 'success')
     } catch {
       showMessage('Erro ao atualizar foto de perfil no servidor.')

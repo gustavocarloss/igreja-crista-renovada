@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAppContext } from '../../context/AppContext'
+import { useNavigate } from 'react-router-dom'
 import MapPreview from '../common/MapPreview/MapPreview'
 import './AdicionarEvento.css'
 
@@ -10,11 +11,11 @@ export default function AdicionarEvento() {
   const {
     adicionarEvento,
     atualizarEvento,
-    setCurrentPage,
     editingEvent,
     setEditingEvent,
     showMessage
   } = useAppContext()
+  const navigate = useNavigate()
 
   const [novoEvento, setNovoEvento] = useState({
     nome: '',
@@ -92,7 +93,7 @@ export default function AdicionarEvento() {
         adicionarEvento(eventoParaSalvar)
       }
       setEditingEvent(null)
-      setCurrentPage('home')
+      navigate('/')
       setNovoEvento({
         nome: '',
         link: '',
@@ -112,7 +113,7 @@ export default function AdicionarEvento() {
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">
-        <button onClick={() => { setEditingEvent(null); setCurrentPage('home'); }} className="back-btn">
+        <button onClick={() => { setEditingEvent(null); navigate('/') }} className="back-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           Voltar
         </button>

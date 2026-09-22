@@ -11,6 +11,7 @@ import AdicionarEvento from './components/AdicionarEvento/AdicionarEvento'
 import BottomNav from './components/BottomNav/BottomNav'
 import { useState, useEffect } from 'react'
 import Splash from './components/Splash/Splash'
+import { Routes, Route } from 'react-router-dom'
 import './App.css'
 
 /**
@@ -27,31 +28,11 @@ function App() {
     user,
     authPage,
     setAuthPage,
-    currentPage,
     handleLogin,
     handleRegister,
     modalConfig,
     closeModal
   } = useAppContext()
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <Programacao />
-      case 'calendario':
-        return <CalendarioView />
-      case 'detalhes':
-        return <EventoDetalhes />
-      case 'biblia':
-        return <Biblia />
-      case 'perfil':
-        return <Perfil />
-      case 'adicionar':
-        return <AdicionarEvento />
-      default:
-        return <Programacao />
-    }
-  }
 
   const content = !user ? (
     authPage === 'login'
@@ -59,7 +40,15 @@ function App() {
       : <Registro onRegister={handleRegister} onShowLogin={() => setAuthPage('login')} />
   ) : (
     <>
-      {renderPage()}
+      <Routes>
+        <Route path="/" element={<Programacao />} />
+        <Route path="/calendario" element={<CalendarioView />} />
+        <Route path="/detalhes" element={<EventoDetalhes />} />
+        <Route path="/biblia" element={<Biblia />} />
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/adicionar" element={<AdicionarEvento />} />
+        <Route path="*" element={<Programacao />} />
+      </Routes>
       <BottomNav />
     </>
   )

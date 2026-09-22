@@ -51,7 +51,10 @@ export const authService = {
       .insert([{ name, email, auth_user_id: authData.user?.id }])
       .select()
       
-    if (profileError) throw new Error('Erro ao salvar o perfil no banco.')
+    if (profileError) {
+      console.error('Database Error:', profileError)
+      throw new Error(`Erro no banco: ${profileError.message}`)
+    }
     
     return profile
   },
@@ -114,41 +117,37 @@ export const eventService = {
  */
 export const attendanceService = {
   async fetchAllAttendances() {
-    const res = await fetch(`${SUPABASE_REST_URL}/attendance`, {
-      method: 'GET',
-      headers: supabaseHeaders
-    })
-    if (!res.ok) throw new Error('Falha ao carregar presenças')
-    return res.json()
+    const { data, error } = await supabase.from('attendance').select('*')
+    if (error) throw new Error('Falha ao carregar presenças')
+    return data
   },
 
   async fetchUserAttendances(userId) {
-    const res = await fetch(`${SUPABASE_REST_URL}/attendance?user_id=eq.${userId}`, {
-      method: 'GET',
-      headers: supabaseHeaders
-    })
-    if (!res.ok) throw new Error('Falha ao buscar presenças do usuário')
-    return res.json()
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('user_id', userId)
+    if (error) throw new Error('Falha ao buscar presenças do usuário')
+    return data
   },
 
   async confirmPresence(userId, meetingId) {
-    const res = await fetch(`${SUPABASE_REST_URL}/attendance`, {
-      method: 'POST',
-      headers: supabaseHeaders,
-      body: JSON.stringify({
-        user_id: userId,
-        meeting_id: meetingId
-      })
-    })
-    return res
+    const { data, error } = await supabase
+      .from('attendance')
+      .insert([{ user_id: userId, meeting_id: meetingId }])
+      .select()
+    if (error) throw new Error('Falha ao confirmar presença no banco de dados.')
+    return { ok: true, data }
   },
 
   async cancelPresence(userId, meetingId) {
-    const res = await fetch(`${SUPABASE_REST_URL}/attendance?user_id=eq.${userId}&meeting_id=eq.${meetingId}`, {
-      method: 'DELETE',
-      headers: supabaseHeaders
-    })
-    return res
+    const { data, error } = await supabase
+      .from('attendance')
+      .delete()
+      .eq('user_id', userId)
+      .eq('meeting_id', meetingId)
+    if (error) throw new Error('Falha ao cancelar presença no banco de dados.')
+    return { ok: true, data }
   }
 }
 
@@ -157,22 +156,21 @@ export const attendanceService = {
  */
 export const chatService = {
   async fetchMessages(meetingId) {
-    // Ordem cronológica ascendente para o chat (mais antigos no topo, novos embaixo)
-    const res = await fetch(`${SUPABASE_REST_URL}/messages?meeting_id=eq.${meetingId}&order=created_at.asc`, {
-      method: 'GET',
-      headers: supabaseHeaders
-    })
-    if (!res.ok) throw new Error('Falha ao buscar mensagens')
-    return res.json()
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('meeting_id', meetingId)
+      .order('created_at', { ascending: true })
+    if (error) throw new Error('Falha ao buscar mensagens')
+    return data
   },
 
   async sendMessage(messageData) {
-    const res = await fetch(`${SUPABASE_REST_URL}/messages`, {
-      method: 'POST',
-      headers: supabaseHeaders,
-      body: JSON.stringify(messageData)
-    })
-    if (!res.ok) throw new Error('Falha ao enviar mensagem')
-    return res
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([messageData])
+      .select()
+    if (error) throw new Error('Falha ao enviar mensagem')
+    return { ok: true, data }
   }
 }

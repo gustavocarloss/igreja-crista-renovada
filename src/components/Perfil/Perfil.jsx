@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { useAppContext } from '../../context/AppContext'
+import { useNavigate } from 'react-router-dom'
 import { authService } from '../../services/api'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import './Perfil.css'
@@ -8,7 +9,8 @@ import './Perfil.css'
  * Componente que exibe o perfil do usuário logado, seus eventos confirmados e logout.
  */
 export default function Perfil() {
-  const { user, setUser, eventos, setCurrentPage, setPreviousPage, setSelectedEvent, atualizarAvatar, showMessage } = useAppContext()
+  const { user, setUser, eventos, setSelectedEvent, atualizarAvatar, showMessage } = useAppContext()
+  const navigate = useNavigate()
   const fileInputRef = useRef(null)
   
   const [isEditing, setIsEditing] = useState(false)
@@ -35,9 +37,8 @@ export default function Perfil() {
   )
 
   const handleVerDetalhes = (evento) => {
-    setPreviousPage('perfil')
     setSelectedEvent(evento)
-    setCurrentPage('detalhes')
+    navigate('/detalhes')
   }
 
   const handleLogout = () => {
