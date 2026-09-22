@@ -41,7 +41,7 @@ export default function Login({ onLogin, onShowRegister }) {
       {isSubmitting && <LoadingSpinner fullScreen={true} message="Autenticando..." />}
       <div className="login-card">
         <div className="login-header">
-          <img src="/icr-logo.png" alt="ICR Logo" className="login-logo" />
+          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="login-logo" />
           <h1>Igreja Cristã Renovada</h1>
           <p className="verse">{verse}</p>
         </div>

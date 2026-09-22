@@ -85,41 +85,27 @@ export const authService = {
  */
 export const eventService = {
   async fetchEvents() {
-    const res = await fetch(`${SUPABASE_REST_URL}/meeting`, {
-      method: 'GET',
-      headers: supabaseHeaders
-    })
-    if (!res.ok) throw new Error('Falha ao carregar eventos')
-    return res.json()
+    const { data, error } = await supabase.from('meeting').select('*')
+    if (error) throw new Error('Falha ao carregar eventos')
+    return data
   },
 
   async addEvent(eventRow) {
-    const res = await fetch(`${SUPABASE_REST_URL}/meeting`, {
-      method: 'POST',
-      headers: supabaseHeaders,
-      body: JSON.stringify(eventRow)
-    })
-    if (!res.ok) throw new Error('Falha ao adicionar evento')
-    return res.json()
+    const { data, error } = await supabase.from('meeting').insert([eventRow]).select()
+    if (error) throw new Error(error.message)
+    return data
   },
 
   async updateEvent(id, eventRow) {
-    const res = await fetch(`${SUPABASE_REST_URL}/meeting?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: supabaseHeaders,
-      body: JSON.stringify(eventRow)
-    })
-    if (!res.ok) throw new Error('Falha ao atualizar evento')
-    return res.json()
+    const { data, error } = await supabase.from('meeting').update(eventRow).eq('id', id).select()
+    if (error) throw new Error(error.message)
+    return data
   },
 
   async deleteEvent(id) {
-    const res = await fetch(`${SUPABASE_REST_URL}/meeting?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: supabaseHeaders
-    })
-    if (!res.ok) throw new Error('Falha ao excluir evento')
-    return res
+    const { error } = await supabase.from('meeting').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+    return true
   }
 }
 

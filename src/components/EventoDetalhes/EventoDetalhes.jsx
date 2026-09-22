@@ -30,6 +30,13 @@ export default function EventoDetalhes() {
     return eventDateTime < now
   })()
 
+  const isHappeningNow = (() => {
+    if (!selectedEvent.raw_date) return false;
+    const eventDate = new Date(selectedEvent.raw_date);
+    const currTime = new Date();
+    return eventDate <= currTime && currTime.getTime() - eventDate.getTime() < 4 * 60 * 60 * 1000;
+  })();
+
   const handleConfirmar = () => {
     confirmarPresenca(selectedEvent.id)
   }
@@ -51,7 +58,7 @@ export default function EventoDetalhes() {
         <div className="detalhes-card">
           <div className="detalhes-header">
             <h2>{selectedEvent.nome}</h2>
-            {selectedEvent.aoVivo && <span className="live-badge">AO VIVO</span>}
+            {selectedEvent.aoVivo && isHappeningNow && <span className="live-badge">AO VIVO</span>}
           </div>
 
           <div className="detalhes-body">

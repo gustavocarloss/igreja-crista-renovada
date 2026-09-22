@@ -57,7 +57,7 @@ export default function CalendarioView() {
   return (
     <div className="page">
       <div className="top-header-bar">
-        <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">

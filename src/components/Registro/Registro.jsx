@@ -45,7 +45,7 @@ export default function Registro({ onRegister, onShowLogin }) {
       {isSubmitting && <LoadingSpinner fullScreen={true} message="Criando sua conta..." />}
       <div className="login-card">
         <div className="login-header">
-          <img src="/icr-logo.png" alt="ICR Logo" className="login-logo" />
+          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="login-logo" />
           <h1>Nova Conta</h1>
           <p className="verse">{verse}</p>
         </div>

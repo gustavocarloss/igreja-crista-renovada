@@ -64,11 +64,11 @@ export default function Biblia() {
     return (
       <div className="page leitura-page">
         <div className="top-header-bar">
-          <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
           <span className="header-title">Igreja Cristã Renovada</span>
         </div>
         <header className="biblia-header-nav">
-          <button onClick={handleVoltar} className="back-btn-biblia">
+          <button onClick={handleVoltar} className="back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Voltar
           </button>
@@ -140,11 +140,11 @@ export default function Biblia() {
     return (
       <div className="page">
         <div className="top-header-bar">
-          <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
           <span className="header-title">Igreja Cristã Renovada</span>
         </div>
         <header className="biblia-header-nav">
-          <button onClick={handleVoltar} className="back-btn-biblia">
+          <button onClick={handleVoltar} className="back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Voltar
           </button>
@@ -173,7 +173,7 @@ export default function Biblia() {
   return (
     <div className="page">
       <div className="top-header-bar">
-        <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">

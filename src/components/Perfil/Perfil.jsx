@@ -131,7 +131,7 @@ export default function Perfil() {
     <div className="page">
       {(isSaving || isSavingPassword) && <LoadingSpinner fullScreen={true} message="Atualizando seus dados..." />}
       <div className="top-header-bar">
-        <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">
@@ -205,11 +205,13 @@ export default function Perfil() {
               <>
                 <div className="user-name-row">
                   <h3>{user.nome}</h3>
+                </div>
+                <div className="user-email-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <p style={{ margin: 0 }}>{user.email}</p>
                   <button className="edit-profile-icon" onClick={() => setIsEditing(true)} title="Alterar E-mail">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                 </div>
-                <p>{user.email}</p>
               </>
             )}
           </div>

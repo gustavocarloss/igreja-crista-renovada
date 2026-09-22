@@ -24,8 +24,17 @@ export default function Programacao() {
   const now = new Date()
   const activeEvents = eventos.filter(evento => {
     if (!evento.raw_date) return true
-    return new Date(evento.raw_date) >= now
+    const eventDate = new Date(evento.raw_date)
+    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000)
+    return eventDate >= fourHoursAgo
   })
+
+  const isHappeningNow = (evento) => {
+    if (!evento.raw_date) return false;
+    const eventDate = new Date(evento.raw_date);
+    const currTime = new Date();
+    return eventDate <= currTime && currTime.getTime() - eventDate.getTime() < 4 * 60 * 60 * 1000;
+  }
 
   const sortedEvents = [...activeEvents].sort((a, b) => {
     if (a.aoVivo && !b.aoVivo) return -1
@@ -39,7 +48,7 @@ export default function Programacao() {
   return (
     <div className="page">
       <div className="top-header-bar">
-        <img src="/icr-logo.png" alt="ICR Logo" className="header-logo" />
+        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
 
@@ -54,7 +63,7 @@ export default function Programacao() {
             <div key={evento.id} className="evento-card">
               <div className="evento-header">
                 <h3>{evento.nome}</h3>
-                {evento.aoVivo && <span className="live-badge">AO VIVO</span>}
+                {evento.aoVivo && isHappeningNow(evento) && <span className="live-badge">AO VIVO</span>}
               </div>
               <div className="evento-info">
                 <p className="evento-horario">
