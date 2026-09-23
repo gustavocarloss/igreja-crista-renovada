@@ -151,7 +151,7 @@
 }
 
 .save-profile-btn:hover:not(:disabled) {
-  background: #164282;
+  background: var(--primary-navy);
 }
 
 .save-profile-btn:disabled {

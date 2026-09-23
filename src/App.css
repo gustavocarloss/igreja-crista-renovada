@@ -1,7 +1,7 @@
 /* Design System - Igreja Cristã Renovada */
 :root {
-  --primary-navy: #0c326e;
-  --secondary-navy: #164282;
+  --primary-navy: #183672;
+  --secondary-navy: #183672;
   
   /* Cores de contraste baseadas no prata/azul-cinza do logotipo */
   --accent-color: #8fa9c4;
@@ -31,7 +31,7 @@
   --radius-xl: 32px;
 
   /* Gradients */
-  --grad-navy: linear-gradient(135deg, #0c326e 0%, #164282 100%);
+  --grad-navy: linear-gradient(135deg, #183672 0%, #183672 100%);
   --grad-accent: linear-gradient(135deg, #8fa9c4 0%, #b0c2de 100%);
   --grad-gold: var(--grad-accent); /* compatibilidade */
 }
@@ -105,7 +105,8 @@ button, input, textarea, select {
   gap: 12px;
   background: var(--primary-navy);
   color: #FFFFFF;
-  padding: 14px 24px;
+  padding: 0 24px 0 12px;
+  height: 64px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -116,31 +117,42 @@ button, input, textarea, select {
 }
 
 .header-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+  height: 100%;
+  width: auto;
+  object-fit: cover;
 }
 
 .header-title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .page-header {
-  margin-bottom: 32px;
-  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 0;
 }
 
 .page-header h1 {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--primary-navy);
   letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.page-header .back-btn {
+  margin-bottom: 0;
+  padding: 8px;
+  border-radius: 50%;
 }
 
 .page-header p {
   color: var(--text-muted);
   font-weight: 500;
+  margin: 0;
 }
 
 .secao-title {

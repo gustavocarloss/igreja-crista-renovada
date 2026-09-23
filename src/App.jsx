@@ -61,6 +61,7 @@ function App() {
         message={modalConfig.message}
         type={modalConfig.type}
         onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
       />
     </div>
   )

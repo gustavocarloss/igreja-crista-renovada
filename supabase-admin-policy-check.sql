@@ -1,49 +1,41 @@
--- Enable RLS on the meeting table
-ALTER TABLE meeting ENABLE ROW LEVEL SECURITY;
+-- Remove política antiga que liberava INSERT geral (inclusive para usuários não autenticados)
+DROP POLICY "Enable insert for authenticated users only" ON meeting;
 
--- Policy for INSERT: Only users with role = 'admin' can insert
+-- Apenas admins podem criar eventos
 CREATE POLICY "Admin users can insert meetings"
 ON meeting
 FOR INSERT
 WITH CHECK (
   EXISTS (
-    SELECT 1 
-    FROM "user" 
-    WHERE auth_user_id = auth.uid() 
-      AND role = 'admin'
+    SELECT 1 FROM "user" 
+    WHERE auth_user_id = auth.uid() AND role = 'admin'
   )
 );
 
--- Policy for UPDATE: Only users with role = 'admin' can update
+-- Apenas admins podem editar eventos
 CREATE POLICY "Admin users can update meetings"
 ON meeting
 FOR UPDATE
 USING (
   EXISTS (
-    SELECT 1 
-    FROM "user" 
-    WHERE auth_user_id = auth.uid() 
-      AND role = 'admin'
+    SELECT 1 FROM "user" 
+    WHERE auth_user_id = auth.uid() AND role = 'admin'
   )
 )
 WITH CHECK (
   EXISTS (
-    SELECT 1 
-    FROM "user" 
-    WHERE auth_user_id = auth.uid() 
-      AND role = 'admin'
+    SELECT 1 FROM "user" 
+    WHERE auth_user_id = auth.uid() AND role = 'admin'
   )
 );
 
--- Policy for DELETE: Only users with role = 'admin' can delete
+-- Apenas admins podem excluir eventos
 CREATE POLICY "Admin users can delete meetings"
 ON meeting
 FOR DELETE
 USING (
   EXISTS (
-    SELECT 1 
-    FROM "user" 
-    WHERE auth_user_id = auth.uid() 
-      AND role = 'admin'
+    SELECT 1 FROM "user" 
+    WHERE auth_user_id = auth.uid() AND role = 'admin'
   )
 );

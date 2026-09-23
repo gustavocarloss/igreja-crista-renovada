@@ -136,7 +136,10 @@ export const attendanceService = {
       .from('attendance')
       .insert([{ user_id: userId, meeting_id: meetingId }])
       .select()
-    if (error) throw new Error('Falha ao confirmar presença no banco de dados.')
+    if (error) {
+      console.error('Supabase confirmPresence error:', error)
+      throw new Error(error.message)
+    }
     return { ok: true, data }
   },
 
@@ -146,7 +149,10 @@ export const attendanceService = {
       .delete()
       .eq('user_id', userId)
       .eq('meeting_id', meetingId)
-    if (error) throw new Error('Falha ao cancelar presença no banco de dados.')
+    if (error) {
+      console.error('Supabase cancelPresence error:', error)
+      throw new Error(error.message)
+    }
     return { ok: true, data }
   }
 }

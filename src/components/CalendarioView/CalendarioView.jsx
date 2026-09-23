@@ -63,17 +63,16 @@ export default function CalendarioView() {
       </div>
       <header className="page-header">
         <h1>Agenda Mensal</h1>
-        <p>Acompanhe nossa programação</p>
       </header>
 
       <div className="calendar-card">
         <div className="calendar-header">
           <button onClick={() => setCurrentMonth(new Date(year, month - 1))} className="cal-nav-btn" aria-label="Mês Anterior">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <h2>{monthNames[month]} {year}</h2>
           <button onClick={() => setCurrentMonth(new Date(year, month + 1))} className="cal-nav-btn" aria-label="Próximo Mês">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
 
@@ -101,29 +100,29 @@ export default function CalendarioView() {
       </div>
 
       <div className="proximos-agenda">
-        <h3 className="secao-title">Próximos este mês</h3>
+        <h3 className="secao-title">Eventos deste mês</h3>
         <div className="mini-cards-list">
           {eventos.filter(e => {
             if (!e.raw_date) return false
             const d = new Date(e.raw_date)
             return d.getMonth() === month && d.getFullYear() === year
           })
-          .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
-          .map(evento => (
-            <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
-              <div className="mini-date-box">
-                <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
-                <span className="mini-month">{monthNames[month].substring(0,3)}</span>
+            .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
+            .map(evento => (
+              <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
+                <div className="mini-date-box">
+                  <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
+                  <span className="mini-month">{monthNames[month].substring(0, 3)}</span>
+                </div>
+                <div className="mini-info">
+                  <h4>{evento.nome}</h4>
+                  <p>{new Date(evento.raw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • {evento.local}</p>
+                </div>
+                <div className="mini-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </div>
               </div>
-              <div className="mini-info">
-                <h4>{evento.nome}</h4>
-                <p>{new Date(evento.raw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • {evento.local}</p>
-              </div>
-              <div className="mini-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>

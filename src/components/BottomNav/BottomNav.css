@@ -32,11 +32,11 @@
 }
 
 .nav-item.active {
-  color: #0c326e;
+  color: var(--primary-navy);
 }
 
 .nav-item.active .nav-icon svg {
-  stroke: #0c326e;
+  stroke: var(--primary-navy);
   stroke-width: 2.5px;
 }
 

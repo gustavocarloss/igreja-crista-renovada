@@ -67,14 +67,13 @@ export default function Biblia() {
           <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
           <span className="header-title">Igreja Cristã Renovada</span>
         </div>
-        <header className="biblia-header-nav">
-          <button onClick={handleVoltar} className="back-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Voltar
+        <header className="page-header">
+          <button onClick={handleVoltar} className="back-btn" aria-label="Voltar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </button>
 
           <div className="leitura-header-center">
-            <h2>{livroSelecionado.name} {capituloSelecionado}</h2>
+            <h1>{livroSelecionado.name} {capituloSelecionado}</h1>
             <div className="capitulo-nav-controls">
               <button
                 onClick={() => handleCapituloClick(capituloSelecionado - 1)}
@@ -143,12 +142,11 @@ export default function Biblia() {
           <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
           <span className="header-title">Igreja Cristã Renovada</span>
         </div>
-        <header className="biblia-header-nav">
-          <button onClick={handleVoltar} className="back-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Voltar
+        <header className="page-header">
+          <button onClick={handleVoltar} className="back-btn" aria-label="Voltar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </button>
-          <h2>{livroSelecionado.name}</h2>
+          <h1>{livroSelecionado.name}</h1>
         </header>
 
         <div className="capitulos-secao">

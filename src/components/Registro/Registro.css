@@ -86,7 +86,7 @@
 }
 
 .login-btn {
-  background: #0c326e;
+  background: var(--primary-navy);
   color: white;
   padding: 16px;
   border: none;
@@ -111,7 +111,7 @@
 .secondary-btn {
   background: none;
   border: none;
-  color: #0c326e;
+  color: var(--primary-navy);
   font-weight: 700;
   cursor: pointer;
   margin-left: 5px;

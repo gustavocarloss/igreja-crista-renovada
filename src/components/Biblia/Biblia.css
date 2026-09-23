@@ -15,38 +15,21 @@
   100% { opacity: 0.6; }
 }
 
-.biblia-header-nav {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 32px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  background: var(--bg-main);
-  backdrop-filter: blur(8px);
-  z-index: 10;
-}
 
-.biblia-header-nav h2 {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 0;
-}
 
 .leitura-header-center {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: auto;
+  flex: 1;
 }
 
 .capitulo-nav-controls {
+  margin-left: auto;
   display: flex;
   gap: 8px;
 }
+
 
 .nav-arrow-btn {
   background: var(--primary-navy);
@@ -65,7 +48,7 @@
 
 .nav-arrow-btn:hover:not(:disabled) {
   transform: scale(1.1) translateY(-2px);
-  background: #092654;
+  background: var(--primary-navy);
   box-shadow: 0 6px 16px rgba(12, 50, 110, 0.4);
 }
 

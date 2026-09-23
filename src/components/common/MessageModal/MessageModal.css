@@ -86,3 +86,38 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.modal-svg.confirm {
+  color: var(--accent-color);
+}
+
+.modal-buttons-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.modal-btn-cancel, .modal-btn-confirm {
+  flex: 1;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: none;
+}
+
+.modal-btn-cancel {
+  background: var(--bg-main);
+  color: var(--text-muted);
+}
+
+.modal-btn-confirm {
+  background: var(--danger);
+  color: white;
+}
+
+.modal-btn-cancel:active, .modal-btn-confirm:active {
+  transform: scale(0.96);
+}

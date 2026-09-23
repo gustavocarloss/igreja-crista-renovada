@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 import MapPreview from '../common/MapPreview/MapPreview'
@@ -18,9 +19,12 @@ export default function EventoDetalhes() {
 
   const navigate = useNavigate()
 
+  const [showAttendees, setShowAttendees] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
   if (!selectedEvent) return null
 
-  const jaConfirmado = user?.eventosConfirmados?.includes(selectedEvent.id) || false
+  const jaConfirmado = user?.eventosConfirmados?.some(id => String(id) === String(selectedEvent.id)) || false
 
   const isPastEvent = (() => {
     if (!selectedEvent.raw_date || !selectedEvent.hora) return false
@@ -38,8 +42,16 @@ export default function EventoDetalhes() {
     return eventDate <= currTime && currTime.getTime() - eventDate.getTime() < 4 * 60 * 60 * 1000;
   })();
 
-  const handleConfirmar = () => {
-    confirmarPresenca(selectedEvent.id)
+  const handleConfirmar = async () => {
+    setIsLoading(true)
+    await confirmarPresenca(selectedEvent.id)
+    setIsLoading(false)
+  }
+
+  const handleCancelar = async () => {
+    setIsLoading(true)
+    await cancelarPresenca(selectedEvent.id)
+    setIsLoading(false)
   }
 
   const eventAttendees = presencas
@@ -47,10 +59,13 @@ export default function EventoDetalhes() {
 
   return (
     <div className="page">
+      <div className="top-header-bar">
+        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
+        <span className="header-title">Igreja Cristã Renovada</span>
+      </div>
       <header className="page-header">
-        <button onClick={() => navigate(-1)} className="back-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Voltar
+        <button onClick={() => navigate(-1)} className="back-btn" aria-label="Voltar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <h1>Detalhes do Evento</h1>
       </header>
@@ -65,7 +80,7 @@ export default function EventoDetalhes() {
           <div className="detalhes-body">
             <div className="detalhe-row">
               <span className="detalhe-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
               </span>
               <div className="detalhe-content">
                 <label>Data e Horário</label>
@@ -75,7 +90,7 @@ export default function EventoDetalhes() {
 
             <div className="detalhe-row">
               <span className="detalhe-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
               </span>
               <div className="detalhe-content">
                 <label>Responsável / Pastor</label>
@@ -85,15 +100,15 @@ export default function EventoDetalhes() {
 
             <div className="detalhe-row">
               <span className="detalhe-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
               </span>
               <div className="detalhe-content">
                 <label>Localização</label>
                 <p>{selectedEvent.local}</p>
-                <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedEvent.local)}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedEvent.local)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="maps-link"
                 >
                   Abrir no Google Maps
@@ -113,7 +128,7 @@ export default function EventoDetalhes() {
             {selectedEvent.link && (
               <a href={selectedEvent.link} target="_blank" rel="noopener noreferrer" className="link-transmissao">
                 <span className="icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>
                 </span>
                 Acessar Transmissão Online
               </a>
@@ -122,19 +137,9 @@ export default function EventoDetalhes() {
             <div className="attendees-section">
               <label>Presenças Confirmadas ({eventAttendees.length})</label>
               {eventAttendees.length > 0 ? (
-                <div className="attendees-list">
-                  {eventAttendees.map((att, idx) => (
-                    <div key={idx} className="attendee-badge">
-                      <div 
-                        className="attendee-avatar-mini"
-                        style={att.avatar_url ? { backgroundImage: `url(${att.avatar_url})` } : {}}
-                      >
-                        {!att.avatar_url && att.user_name.charAt(0).toUpperCase()}
-                      </div>
-                      <span>{att.user_name}</span>
-                    </div>
-                  ))}
-                </div>
+                <button className="view-attendees-btn" onClick={() => setShowAttendees(true)}>
+                  Ver lista de confirmados
+                </button>
               ) : (
                 <p className="no-attendees">Nenhuma presença confirmada ainda.</p>
               )}
@@ -149,22 +154,49 @@ export default function EventoDetalhes() {
             ) : jaConfirmado ? (
               <button
                 className="cancelar-presenca-btn-full"
-                onClick={() => cancelarPresenca(selectedEvent.id)}
+                onClick={handleCancelar}
+                disabled={isLoading}
               >
-                Cancelar Presença
+                {isLoading ? 'Cancelando...' : 'Cancelar Presença'}
               </button>
             ) : (
               <button
                 className="confirmar-presenca-btn"
                 onClick={handleConfirmar}
+                disabled={isLoading}
               >
-                Confirmar minha Presença
+                {isLoading ? 'Confirmando...' : 'Confirmar minha Presença'}
               </button>
             )}
-            {!isPastEvent && <p className="footer-hint">Confirme para ajudar na organização do evento</p>}
+            {!isPastEvent && <p className="footer-hint">Clique aqui caso queira participar</p>}
           </div>
         </div>
       </div>
+      {showAttendees && (
+        <div className="attendees-modal-overlay" onClick={() => setShowAttendees(false)}>
+          <div className="attendees-modal" onClick={e => e.stopPropagation()}>
+            <div className="attendees-modal-header">
+              <h3>Lista de Confirmados</h3>
+              <button className="close-modal-btn" onClick={() => setShowAttendees(false)}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <div className="attendees-modal-body">
+              {eventAttendees.map((att, idx) => (
+                <div key={idx} className="modal-attendee-row">
+                  <div
+                    className="modal-attendee-avatar"
+                    style={att.avatar_url ? { backgroundImage: `url(${att.avatar_url})` } : {}}
+                  >
+                    {!att.avatar_url && att.user_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span>{att.user_name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

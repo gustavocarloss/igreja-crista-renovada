@@ -2,6 +2,7 @@
 import { useState, createContext, useContext, useEffect } from 'react'
 import { authService, eventService, attendanceService, supabaseHeaders, supabase } from '../services/api'
 import { extractLocalDateAndTime } from '../utils/date'
+import { useNavigate } from 'react-router-dom'
 
 const AppContext = createContext()
 
@@ -14,6 +15,7 @@ export const useAppContext = () => {
 }
 
 export function AppProvider({ children }) {
+  const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
   const [authPage, setAuthPage] = useState('login')
@@ -26,7 +28,9 @@ export function AppProvider({ children }) {
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     message: '',
-    type: 'error'
+    type: 'error',
+    onConfirm: null,
+    onCancel: null
   })
 
   useEffect(() => {
@@ -34,11 +38,29 @@ export function AppProvider({ children }) {
   }, [])
 
   const showMessage = (message, type = 'error') => {
-    setModalConfig({ isOpen: true, message, type })
+    setModalConfig({ isOpen: true, message, type, onConfirm: null, onCancel: null })
   }
 
   const closeModal = () => {
-    setModalConfig({ ...modalConfig, isOpen: false })
+    if (modalConfig.onCancel) modalConfig.onCancel()
+    setModalConfig(prev => ({ ...prev, isOpen: false }))
+  }
+
+  const confirmAsync = (message) => {
+    return new Promise((resolve) => {
+      setModalConfig({
+        isOpen: true,
+        message,
+        type: 'confirm',
+        onConfirm: () => {
+          setModalConfig(prev => ({ ...prev, isOpen: false }))
+          resolve(true)
+        },
+        onCancel: () => {
+          resolve(false)
+        }
+      })
+    })
   }
 
   const fetchAttendeesList = async () => {
@@ -55,6 +77,7 @@ export function AppProvider({ children }) {
         return {
           id: att.id,
           meeting_id: att.meeting_id,
+          user_id: att.user_id,
           user_name: u ? u.name : 'Membro',
           avatar_url: u ? u.avatar_url : null
         }
@@ -151,7 +174,7 @@ export function AppProvider({ children }) {
     fetchAttendeesList()
   }, [])
 
-  const handleLogin = async ({ email, senha }, rememberMe) => {
+  const handleLogin = async ({ email, senha }) => {
     try {
       const data = await authService.login(email, senha)
 
@@ -174,7 +197,7 @@ export function AppProvider({ children }) {
       }
 
       setUser(newUser)
-      
+      navigate('/')
       fetchAttendeesList()
       // O token agora é atualizado automaticamente pelo onAuthStateChange do Supabase
     } catch (err) {
@@ -212,10 +235,12 @@ export function AppProvider({ children }) {
         eventosConfirmados: [...user.eventosConfirmados, eventoId]
       }
       setUser(updatedUser)
+      setPresencas([...presencas, { meeting_id: eventoId, user_id: user.id, user_name: user.nome, avatar_url: user.avatar_url }])
       fetchAttendeesList()
       showMessage('Presença confirmada com sucesso!', 'success')
-    } catch {
-      showMessage('Erro de conexão ao confirmar presença.')
+    } catch (error) {
+      console.error(error)
+      showMessage(error.message || 'Erro de conexão ao confirmar presença.')
     }
   }
 
@@ -228,14 +253,16 @@ export function AppProvider({ children }) {
       }
       const updatedUser = {
         ...user,
-        eventosConfirmados: user.eventosConfirmados.filter(id => id !== eventoId)
+        eventosConfirmados: user.eventosConfirmados.filter(id => String(id) !== String(eventoId))
       }
       setUser(updatedUser)
       localStorage.setItem('churchUser', JSON.stringify(updatedUser))
+      setPresencas(presencas.filter(p => !(String(p.meeting_id) === String(eventoId) && String(p.user_id) === String(user.id))))
       fetchAttendeesList()
       showMessage('Presença cancelada com sucesso!', 'success')
-    } catch {
-      showMessage('Erro de conexão ao cancelar presença.')
+    } catch (error) {
+      console.error(error)
+      showMessage(error.message || 'Erro de conexão ao cancelar presença.')
     }
   }
 
@@ -331,7 +358,8 @@ export function AppProvider({ children }) {
   }
 
   const excluirEvento = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este evento?')) return
+    const confirmed = await confirmAsync('Tem certeza que deseja excluir este evento?')
+    if (!confirmed) return
     try {
       await eventService.deleteEvent(id)
       setEventos(eventos.filter(e => e.id !== id))

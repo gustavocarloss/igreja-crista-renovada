@@ -109,12 +109,12 @@
   margin-top: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #164282;
+  color: var(--primary-navy);
   text-decoration: underline;
 }
 
 .maps-link:hover {
-  color: #0c326e;
+  color: var(--primary-navy);
 }
 
 .presenca-confirmada-container {
@@ -255,4 +255,118 @@
   font-size: 14px;
   color: var(--text-muted);
   font-style: italic;
+}
+
+.view-attendees-btn {
+  background: var(--bg-card);
+  color: var(--primary-navy);
+  border: 1px solid var(--primary-navy);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.view-attendees-btn:hover {
+  background: var(--accent-soft);
+}
+
+.attendees-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.attendees-modal {
+  background: var(--bg-card);
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+.attendees-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attendees-modal-header h3 {
+  font-size: 18px;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.close-modal-btn:hover {
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+.attendees-modal-body {
+  padding: 16px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-attendee-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-attendee-row:last-child {
+  border-bottom: none;
+}
+
+.modal-attendee-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  background-size: cover;
+  background-position: center;
+}
+
+.modal-attendee-row span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
 }

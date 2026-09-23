@@ -18,7 +18,7 @@
 .evento-header h3 {
   font-size: 20px;
   font-weight: 700;
-  color: #0c326e;
+  color: var(--primary-navy);
 }
 
 .live-badge {
@@ -61,7 +61,7 @@
 }
 
 .saiba-mais-btn {
-  background: #0c326e;
+  background: var(--primary-navy);
   color: white;
   padding: 10px 20px;
   border: none;
@@ -120,4 +120,47 @@
 .empty-icon {
   font-size: 48px;
   opacity: 0.3;
+}
+
+.eventos-anteriores-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 2px dashed var(--border-color);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin-bottom: 20px;
+}
+
+.past-event-card {
+  opacity: 0.75;
+  background: var(--bg-main);
+}
+
+.past-badge {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.saiba-mais-btn.past {
+  background: var(--bg-card);
+  color: var(--primary-navy);
+  border: 1px solid var(--primary-navy);
+}
+
+.no-past-events {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  margin-top: 16px;
 }
