@@ -58,7 +58,7 @@ export default function BottomNav() {
       {visibleNavItems.map(item => (
         <button
           key={item.id}
-          className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+          className={`nav-item ${(item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)) ? 'active' : ''}`}
           onClick={() => handleNavClick(item)}
         >
           <span className="nav-icon">{item.icon}</span>

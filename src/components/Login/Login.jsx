@@ -42,7 +42,7 @@ export default function Login({ onLogin, onShowRegister }) {
       <div className="login-card">
         <div className="login-header">
           <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="login-logo" />
-          <h1>Igreja Cristã Renovada</h1>
+          <h1>Seja bem vindo!</h1>
           <p className="verse">{verse}</p>
         </div>
 

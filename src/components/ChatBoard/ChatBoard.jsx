@@ -91,7 +91,14 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
                     {msg.text}
                   </div>
                   <span className="chat-time">
-                    {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.created_at).toLocaleString('pt-BR', {
+                      timeZone: 'America/Sao_Paulo',
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }).replace(',', ' às')}
                   </span>
                 </div>
               </div>

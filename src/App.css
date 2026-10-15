@@ -114,12 +114,20 @@ button, input, textarea, select {
   margin-left: calc(-50vw + 50%);
   margin-bottom: 24px;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .header-logo {
-  height: 100%;
+  height: 48px;
+  max-height: 100%;
   width: auto;
-  object-fit: cover;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  /* Funde o fundo azul da imagem com a barra, sem bordas visíveis */
+  background: var(--primary-navy);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 62%, transparent 100%);
 }
 
 .header-title {

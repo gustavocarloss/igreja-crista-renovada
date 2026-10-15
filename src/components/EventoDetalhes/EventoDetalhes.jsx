@@ -27,12 +27,19 @@ export default function EventoDetalhes() {
   const jaConfirmado = user?.eventosConfirmados?.some(id => String(id) === String(selectedEvent.id)) || false
 
   const isPastEvent = (() => {
-    if (!selectedEvent.raw_date || !selectedEvent.hora) return false
-    const now = new Date()
-    const [y, m, d] = selectedEvent.raw_date.split('-')
-    const [h, min] = selectedEvent.hora.split(':')
-    const eventDateTime = new Date(y, m - 1, d, h, min)
-    return eventDateTime < now
+    const raw = selectedEvent.raw_date
+    if (!raw) return false
+    let eventDateTime
+    if (String(raw).includes('T')) {
+      // raw_date já contém data e hora (ISO)
+      eventDateTime = new Date(raw)
+    } else {
+      const [y, m, d] = String(raw).split('-').map(Number)
+      const [h, min] = (selectedEvent.hora || '23:59').split(':').map(Number)
+      eventDateTime = new Date(y, m - 1, d, h, min)
+    }
+    if (isNaN(eventDateTime.getTime())) return false
+    return eventDateTime < new Date()
   })()
 
   const isHappeningNow = (() => {
@@ -157,7 +164,7 @@ export default function EventoDetalhes() {
                 onClick={handleCancelar}
                 disabled={isLoading}
               >
-                {isLoading ? 'Cancelando...' : 'Cancelar Presença'}
+                {isLoading ? 'Cancelando...' : 'Cancelar presença'}
               </button>
             ) : (
               <button
@@ -165,10 +172,10 @@ export default function EventoDetalhes() {
                 onClick={handleConfirmar}
                 disabled={isLoading}
               >
-                {isLoading ? 'Confirmando...' : 'Confirmar minha Presença'}
+                {isLoading ? 'Confirmando...' : 'Confirmar presença'}
               </button>
             )}
-            {!isPastEvent && <p className="footer-hint">Clique aqui caso queira participar</p>}
+            {!isPastEvent && <p className="footer-hint"></p>}
           </div>
         </div>
       </div>

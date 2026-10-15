@@ -100,8 +100,12 @@ export default function Perfil() {
         email: editForm.novoEmail
       }
 
-      await authService.updateAuthEmail(editForm.novoEmail)
       await authService.updateUser(user.id, dataToUpdate)
+      try {
+        await authService.updateAuthEmail(editForm.novoEmail)
+      } catch (err) {
+        console.warn('Erro ao atualizar auth email no Supabase (limite de SMTP):', err)
+      }
 
       const updatedUser = { ...user, email: editForm.novoEmail }
       setUser(updatedUser)
@@ -194,26 +198,26 @@ export default function Perfil() {
                   type="email"
                   value={editForm.emailAtual}
                   onChange={(e) => setEditForm({ ...editForm, emailAtual: e.target.value })}
-                  placeholder="E-mail Atual"
+                  placeholder="E-mail atual"
                   required
                 />
                 <input
                   type="email"
                   value={editForm.novoEmail}
                   onChange={(e) => setEditForm({ ...editForm, novoEmail: e.target.value })}
-                  placeholder="Novo E-mail"
+                  placeholder="Novo e-mail"
                   required
                 />
                 <input
                   type="email"
                   value={editForm.repetirNovoEmail}
                   onChange={(e) => setEditForm({ ...editForm, repetirNovoEmail: e.target.value })}
-                  placeholder="Confirmar Novo E-mail"
+                  placeholder="Confirmar novo e-mail"
                   required
                 />
                 <div className="edit-form-actions">
                   <button type="submit" disabled={isSaving} className="save-profile-btn">
-                    {isSaving ? 'Alterando...' : 'Alterar E-mail'}
+                    {isSaving ? 'Alterando...' : 'Alterar e-mail'}
                   </button>
                   <button type="button" onClick={() => setIsEditing(false)} className="cancel-profile-btn">
                     Cancelar
@@ -227,7 +231,7 @@ export default function Perfil() {
                 </div>
                 <div className="user-email-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <p style={{ margin: 0 }}>{user.email}</p>
-                  <button className="edit-profile-icon" onClick={() => setIsEditing(true)} title="Alterar E-mail">
+                  <button className="edit-profile-icon" onClick={() => setIsEditing(true)} title="Alterar e-mail">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                 </div>
@@ -257,9 +261,9 @@ export default function Perfil() {
             ) : (
               <p className="no-data">Nenhum evento futuro confirmado.</p>
             )}
-            
-            <button 
-              className="view-attendees-btn" 
+
+            <button
+              className="view-attendees-btn"
               style={{ marginTop: '16px' }}
               onClick={() => setShowHistory(true)}
             >
@@ -323,7 +327,7 @@ export default function Perfil() {
             <div className="attendees-modal-header">
               <h3>Histórico de Presenças</h3>
               <button className="close-modal-btn" onClick={() => setShowHistory(false)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
             <div className="attendees-modal-body">
@@ -331,8 +335,8 @@ export default function Perfil() {
                 <>
                   <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Eventos Futuros</h4>
                   {futureEvents.map(evento => (
-                    <div 
-                      key={evento.id} 
+                    <div
+                      key={evento.id}
                       className="confirmado-item clickable-item"
                       style={{ marginBottom: '8px' }}
                       onClick={() => { setShowHistory(false); handleVerDetalhes(evento); }}
@@ -351,8 +355,8 @@ export default function Perfil() {
               <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Eventos Passados</h4>
               {pastEvents.length > 0 ? (
                 pastEvents.map(evento => (
-                  <div 
-                    key={evento.id} 
+                  <div
+                    key={evento.id}
                     className="confirmado-item clickable-item"
                     style={{ marginBottom: '8px', opacity: 0.7 }}
                     onClick={() => { setShowHistory(false); handleVerDetalhes(evento); }}

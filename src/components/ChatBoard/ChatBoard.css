@@ -12,8 +12,8 @@
 
 .chat-header {
   padding: 16px;
-  background: var(--accent-soft);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--primary-navy);
+  border-bottom: 1px solid var(--primary-navy);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,7 +22,7 @@
 .chat-header h3 {
   font-size: 16px;
   font-weight: 700;
-  color: var(--primary-navy);
+  color: #ffffff;
   margin: 0;
 }
 

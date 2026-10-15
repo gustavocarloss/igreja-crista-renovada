@@ -228,7 +228,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s;
-  margin-top: 32px;
+  margin-top: 8px;
 }
 
 .logout-btn:hover {

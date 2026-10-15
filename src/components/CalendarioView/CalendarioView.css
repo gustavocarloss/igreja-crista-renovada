@@ -84,6 +84,12 @@
   transform: scale(0.9);
 }
 
+.calendar-day.today {
+  background: var(--primary-navy);
+  color: white;
+  border: 1px solid var(--primary-navy);
+}
+
 .event-indicator {
   width: 5px;
   height: 5px;

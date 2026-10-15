@@ -83,10 +83,13 @@ export default function CalendarioView() {
           {calendarDays.map((day, idx) => {
             const dayEvents = getEventsForDay(day)
             const hasEvents = dayEvents.length > 0
+            const today = new Date();
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
             return (
               <div
                 key={idx}
-                className={`calendar-day ${!day ? 'empty' : ''} ${hasEvents ? 'has-events' : ''}`}
+                className={`calendar-day ${!day ? 'empty' : ''} ${hasEvents ? 'has-events' : ''} ${isToday ? 'today' : ''}`}
                 onClick={() => day && hasEvents && handleDayClick(day)}
                 role={day && hasEvents ? "button" : undefined}
                 aria-label={day && hasEvents ? `${day} de ${monthNames[month]} com evento` : undefined}
@@ -106,23 +109,31 @@ export default function CalendarioView() {
             if (!e.raw_date) return false
             const d = new Date(e.raw_date)
             return d.getMonth() === month && d.getFullYear() === year
-          })
-            .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
-            .map(evento => (
-              <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
-                <div className="mini-date-box">
-                  <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
-                  <span className="mini-month">{monthNames[month].substring(0, 3)}</span>
+          }).length > 0 ? (
+            eventos.filter(e => {
+              if (!e.raw_date) return false
+              const d = new Date(e.raw_date)
+              return d.getMonth() === month && d.getFullYear() === year
+            })
+              .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
+              .map(evento => (
+                <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
+                  <div className="mini-date-box">
+                    <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
+                    <span className="mini-month">{monthNames[month].substring(0, 3)}</span>
+                  </div>
+                  <div className="mini-info">
+                    <h4>{evento.nome}</h4>
+                    <p>{new Date(evento.raw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • {evento.local}</p>
+                  </div>
+                  <div className="mini-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  </div>
                 </div>
-                <div className="mini-info">
-                  <h4>{evento.nome}</h4>
-                  <p>{new Date(evento.raw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • {evento.local}</p>
-                </div>
-                <div className="mini-arrow">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-                </div>
-              </div>
-            ))}
+              ))
+          ) : (
+            <p className="no-events-month" style={{ color: 'var(--text-muted)', fontSize: '14px', fontStyle: 'italic', textAlign: 'center', width: '100%', padding: '16px 0' }}>Sem eventos para o mês</p>
+          )}
         </div>
       </div>
     </div>

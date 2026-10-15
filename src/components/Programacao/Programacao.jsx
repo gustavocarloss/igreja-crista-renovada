@@ -24,8 +24,7 @@ export default function Programacao() {
   const activeEvents = eventos.filter(evento => {
     if (!evento.raw_date) return true
     const eventDate = new Date(evento.raw_date)
-    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000)
-    return eventDate >= fourHoursAgo
+    return eventDate >= now
   })
 
   const isHappeningNow = (evento) => {
@@ -47,9 +46,8 @@ export default function Programacao() {
   const pastEvents = eventos.filter(evento => {
     if (!evento.raw_date) return false
     const eventDate = new Date(evento.raw_date)
-    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000)
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    return eventDate < fourHoursAgo && eventDate >= sevenDaysAgo
+    return eventDate < now && eventDate >= sevenDaysAgo
   }).sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date))
 
   return (

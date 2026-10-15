@@ -29,10 +29,12 @@
   padding: 8px;
   transition: all 0.3s;
   cursor: pointer;
+  opacity: 0.5;
 }
 
 .nav-item.active {
   color: var(--primary-navy);
+  opacity: 1;
 }
 
 .nav-item.active .nav-icon svg {
