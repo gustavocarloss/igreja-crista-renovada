@@ -1,49 +1,47 @@
 import { useState, useEffect } from 'react'
 import { useAppContext } from '../../context/AppContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import MapPreview from '../common/MapPreview/MapPreview'
+import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
+import ErrorState from '../common/ErrorState/ErrorState'
 import './AdicionarEvento.css'
 
+const EMPTY_EVENT = {
+  nome: '',
+  link: '',
+  local: '',
+  data: '',
+  hora: '',
+  descricao: '',
+  pastor: ''
+}
+
 /**
- * Componente de administração para adicionar ou editar eventos.
+ * Componente de administração para adicionar (/adicionar) ou editar (/editar/:id) eventos.
  */
 export default function AdicionarEvento() {
   const {
+    eventos,
+    eventosLoaded,
+    eventosError,
+    reloadEvents,
     adicionarEvento,
     atualizarEvento,
-    editingEvent,
-    setEditingEvent,
     showMessage
   } = useAppContext()
   const navigate = useNavigate()
+  const { id } = useParams()
 
-  const [novoEvento, setNovoEvento] = useState({
-    nome: '',
-    link: '',
-    local: '',
-    data: '',
-    hora: '',
-    descricao: '',
-    pastor: ''
-  })
+  const isEditing = Boolean(id)
+  const editingEvent = isEditing ? eventos.find(e => String(e.id) === String(id)) : null
 
-  // Limpar formulário ao montar o componente se não estiver editando
+  const [novoEvento, setNovoEvento] = useState(EMPTY_EVENT)
+  const [isSaving, setIsSaving] = useState(false)
+  const [filledFor, setFilledFor] = useState(null)
+
+  // Preenche o formulário uma única vez com os dados do evento em edição
   useEffect(() => {
-    if (!editingEvent) {
-      setNovoEvento({
-        nome: '',
-        link: '',
-        local: '',
-        data: '',
-        hora: '',
-        descricao: '',
-        pastor: ''
-      })
-    }
-  }, [editingEvent])
-
-  useEffect(() => {
-    if (editingEvent) {
+    if (editingEvent && filledFor !== editingEvent.id) {
       setNovoEvento({
         nome: editingEvent.nome || '',
         link: editingEvent.link || '',
@@ -53,8 +51,9 @@ export default function AdicionarEvento() {
         descricao: editingEvent.descricao || '',
         pastor: editingEvent.pastor || ''
       })
+      setFilledFor(editingEvent.id)
     }
-  }, [editingEvent])
+  }, [editingEvent, filledFor])
 
   const getTodayString = () => {
     const tzoffset = (new Date()).getTimezoneOffset() * 60000;
@@ -64,46 +63,58 @@ export default function AdicionarEvento() {
 
   const minDate = getTodayString()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (novoEvento.nome && novoEvento.local && novoEvento.data && novoEvento.hora) {
-      // Validar se data/hora é futura
-      const now = new Date()
+    if (isSaving) return
+
+    const nome = novoEvento.nome.trim()
+    const local = novoEvento.local.trim()
+    if (!nome || !local || !novoEvento.data || !novoEvento.hora) {
+      showMessage('Preencha o nome, o local, a data e o horário do evento.')
+      return
+    }
+
+    // A regra "data futura" vale só para eventos novos; ao editar é permitido corrigir eventos já iniciados.
+    if (!isEditing) {
       const [y, m, d] = novoEvento.data.split('-')
       const [h, min] = novoEvento.hora.split(':')
       const eventDateTime = new Date(y, m - 1, d, h, min)
-
-      if (eventDateTime < now) {
+      if (eventDateTime < new Date()) {
         showMessage('A data e hora do evento devem ser futuras!')
         return
       }
-
-      // Formatando o horário para exibição: "DD/MM/AAAA às HH:mm"
-      const horarioFormatado = `${d}/${m}/${y} às ${novoEvento.hora}`
-
-      const eventoParaSalvar = {
-        ...novoEvento,
-        horario: horarioFormatado,
-        aoVivo: !!novoEvento.link
-      }
-
-      if (editingEvent) {
-        atualizarEvento({ ...editingEvent, ...eventoParaSalvar })
-      } else {
-        adicionarEvento(eventoParaSalvar)
-      }
-      setEditingEvent(null)
-      navigate('/')
-      setNovoEvento({
-        nome: '',
-        link: '',
-        local: '',
-        data: '',
-        hora: '',
-        descricao: '',
-        pastor: ''
-      })
     }
+
+    const payload = { ...novoEvento, nome, local }
+
+    setIsSaving(true)
+    const ok = isEditing
+      ? await atualizarEvento({ ...editingEvent, ...payload })
+      : await adicionarEvento(payload)
+    setIsSaving(false)
+
+    if (ok) navigate('/')
+  }
+
+  if (isEditing && !editingEvent) {
+    return (
+      <div className="page">
+        {!eventosLoaded ? (
+          eventosError ? (
+            <ErrorState message={eventosError} onRetry={() => reloadEvents()} />
+          ) : (
+            <LoadingSpinner message="Carregando evento..." />
+          )
+        ) : (
+          <ErrorState
+            title="Evento não encontrado"
+            message="Este evento não existe mais ou foi removido."
+            retryLabel="Ver programação"
+            onRetry={() => navigate('/')}
+          />
+        )}
+      </div>
+    )
   }
 
   return (
@@ -158,7 +169,7 @@ export default function AdicionarEvento() {
               id="event-date"
               type="date"
               value={novoEvento.data}
-              min={minDate}
+              min={isEditing ? undefined : minDate}
               onChange={(e) => setNovoEvento({ ...novoEvento, data: e.target.value })}
               required
             />
@@ -191,8 +202,8 @@ export default function AdicionarEvento() {
           aria-label="Descrição do evento"
         />
 
-        <button type="submit" className="adicionar-btn">
-          {editingEvent ? 'Salvar Alterações' : 'Adicionar Evento'}
+        <button type="submit" className="adicionar-btn" disabled={isSaving}>
+          {isSaving ? 'Salvando...' : editingEvent ? 'Salvar Alterações' : 'Adicionar Evento'}
         </button>
       </form>
     </div>

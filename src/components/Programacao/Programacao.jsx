@@ -1,5 +1,8 @@
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
+import { getEventStatus } from '../../utils/events'
+import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
+import ErrorState from '../common/ErrorState/ErrorState'
 import './Programacao.css'
 
 /**
@@ -8,46 +11,42 @@ import './Programacao.css'
 export default function Programacao() {
   const {
     eventos,
-    setSelectedEvent,
-    setEditingEvent,
+    eventosLoaded,
+    eventosError,
+    reloadEvents,
     excluirEvento,
     user
   } = useAppContext()
   const navigate = useNavigate()
 
   const handleSaibaMais = (evento) => {
-    setSelectedEvent(evento)
-    navigate('/detalhes')
+    navigate(`/detalhes/${evento.id}`)
   }
 
   const now = new Date()
-  const activeEvents = eventos.filter(evento => {
-    if (!evento.raw_date) return true
-    const eventDate = new Date(evento.raw_date)
-    return eventDate >= now
-  })
+  const statusOf = (evento) => getEventStatus(evento.raw_date, now)
 
-  const isHappeningNow = (evento) => {
-    if (!evento.raw_date) return false;
-    const eventDate = new Date(evento.raw_date);
-    const currTime = new Date();
-    return eventDate <= currTime && currTime.getTime() - eventDate.getTime() < 4 * 60 * 60 * 1000;
-  }
+  // Em andamento (até 4h após o início) + futuros
+  const activeEvents = eventos.filter(evento => statusOf(evento) !== 'past')
 
+  const isHappeningNow = (evento) => statusOf(evento) === 'live'
+
+  // Eventos acontecendo agora vêm primeiro; o resto em ordem cronológica
   const sortedEvents = [...activeEvents].sort((a, b) => {
-    if (a.aoVivo && !b.aoVivo) return -1
-    if (!a.aoVivo && b.aoVivo) return 1
+    const aLive = isHappeningNow(a) && a.aoVivo
+    const bLive = isHappeningNow(b) && b.aoVivo
+    if (aLive && !bLive) return -1
+    if (!aLive && bLive) return 1
     if (a.raw_date && b.raw_date) {
       return new Date(a.raw_date) - new Date(b.raw_date)
     }
     return 0
   })
 
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const pastEvents = eventos.filter(evento => {
     if (!evento.raw_date) return false
-    const eventDate = new Date(evento.raw_date)
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    return eventDate < now && eventDate >= sevenDaysAgo
+    return statusOf(evento) === 'past' && new Date(evento.raw_date) >= sevenDaysAgo
   }).sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date))
 
   return (
@@ -62,7 +61,13 @@ export default function Programacao() {
       </header>
 
       <div className="eventos-list">
-        {sortedEvents.length > 0 ? (
+        {!eventosLoaded ? (
+          eventosError ? (
+            <ErrorState message={eventosError} onRetry={() => reloadEvents()} />
+          ) : (
+            <LoadingSpinner message="Carregando programação..." />
+          )
+        ) : sortedEvents.length > 0 ? (
           sortedEvents.map(evento => (
             <div key={evento.id} className="evento-card">
               <div className="evento-header">
@@ -94,7 +99,7 @@ export default function Programacao() {
                     <button
                       className="icon-btn-edit"
                       title="Editar"
-                      onClick={() => { setEditingEvent(evento); navigate('/adicionar') }}
+                      onClick={() => navigate(`/editar/${evento.id}`)}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                     </button>
@@ -120,7 +125,7 @@ export default function Programacao() {
         )}
       </div>
 
-      <div className="eventos-anteriores-section">
+      <div className="eventos-anteriores-section" hidden={!eventosLoaded}>
         <h2 className="section-title">Eventos Anteriores</h2>
         <div className="eventos-list">
           {pastEvents.length > 0 ? (

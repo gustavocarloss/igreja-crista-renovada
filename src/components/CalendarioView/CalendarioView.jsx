@@ -7,7 +7,7 @@ import './CalendarioView.css'
  * Componente de visualização do calendário mensal e programação integrada.
  */
 export default function CalendarioView() {
-  const { eventos, setSelectedEvent } = useAppContext()
+  const { eventos } = useAppContext()
   const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
@@ -48,12 +48,19 @@ export default function CalendarioView() {
   const handleDayClick = (day) => {
     const dayEvents = getEventsForDay(day)
     if (dayEvents.length === 1) {
-      setSelectedEvent(dayEvents[0])
-      navigate('/detalhes')
+      navigate(`/detalhes/${dayEvents[0].id}`)
     } else if (dayEvents.length > 1) {
       navigate('/')
     }
   }
+
+  const monthEvents = eventos
+    .filter(e => {
+      if (!e.raw_date) return false
+      const d = new Date(e.raw_date)
+      return d.getMonth() === month && d.getFullYear() === year
+    })
+    .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
 
   return (
     <div className="page">
@@ -105,19 +112,10 @@ export default function CalendarioView() {
       <div className="proximos-agenda">
         <h3 className="secao-title">Eventos deste mês</h3>
         <div className="mini-cards-list">
-          {eventos.filter(e => {
-            if (!e.raw_date) return false
-            const d = new Date(e.raw_date)
-            return d.getMonth() === month && d.getFullYear() === year
-          }).length > 0 ? (
-            eventos.filter(e => {
-              if (!e.raw_date) return false
-              const d = new Date(e.raw_date)
-              return d.getMonth() === month && d.getFullYear() === year
-            })
-              .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
+          {monthEvents.length > 0 ? (
+            monthEvents
               .map(evento => (
-                <div key={evento.id} className="agenda-mini-card" onClick={() => { setSelectedEvent(evento); navigate('/detalhes') }} role="button">
+                <div key={evento.id} className="agenda-mini-card" onClick={() => navigate(`/detalhes/${evento.id}`)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/detalhes/${evento.id}`) }}>
                   <div className="mini-date-box">
                     <span className="mini-day">{new Date(evento.raw_date).getDate()}</span>
                     <span className="mini-month">{monthNames[month].substring(0, 3)}</span>

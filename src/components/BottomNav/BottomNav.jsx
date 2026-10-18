@@ -6,14 +6,11 @@ import './BottomNav.css'
  * Componente da barra de navegação inferior do aplicativo.
  */
 export default function BottomNav() {
-  const { setEditingEvent, user } = useAppContext()
+  const { user } = useAppContext()
   const navigate = useNavigate()
   const location = useLocation()
 
   const handleNavClick = (item) => {
-    if (item.id === 'adicionar') {
-      setEditingEvent(null)
-    }
     navigate(item.path)
   }
 
@@ -55,16 +52,20 @@ export default function BottomNav() {
 
   return (
     <nav className="bottom-nav" aria-label="Navegação Principal">
-      {visibleNavItems.map(item => (
-        <button
-          key={item.id}
-          className={`nav-item ${(item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)) ? 'active' : ''}`}
-          onClick={() => handleNavClick(item)}
-        >
-          <span className="nav-icon">{item.icon}</span>
-          <span className="nav-label">{item.label}</span>
-        </button>
-      ))}
+      {visibleNavItems.map(item => {
+        const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+        return (
+          <button
+            key={item.id}
+            className={`nav-item ${isActive ? 'active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
+            onClick={() => handleNavClick(item)}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </button>
+        )
+      })}
     </nav>
   )
 }

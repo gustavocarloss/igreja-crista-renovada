@@ -17,7 +17,6 @@ export default function Login({ onLogin, onShowRegister }) {
     senha: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const [verse, setVerse] = useState('')
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export default function Login({ onLogin, onShowRegister }) {
     if (formData.email && formData.senha) {
       setIsSubmitting(true)
       try {
-        await onLogin(formData, rememberMe)
+        await onLogin(formData)
       } finally {
         setIsSubmitting(false)
       }
@@ -52,6 +51,10 @@ export default function Login({ onLogin, onShowRegister }) {
             <input
               id="login-email"
               type="email"
+              inputMode="email"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
               placeholder="E-mail"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -61,21 +64,12 @@ export default function Login({ onLogin, onShowRegister }) {
           </div>
           <PasswordField
             id="login-senha"
+            autoComplete="current-password"
             value={formData.senha}
             onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
             required
             disabled={isSubmitting}
           />
-          <div className="remember-me-container">
-            <input 
-              type="checkbox" 
-              id="remember-me" 
-              checked={rememberMe} 
-              onChange={(e) => setRememberMe(e.target.checked)} 
-              disabled={isSubmitting}
-            />
-            <label htmlFor="remember-me">Lembrar de mim</label>
-          </div>
           <button type="submit" className="login-btn" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>

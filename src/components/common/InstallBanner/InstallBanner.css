@@ -1,0 +1,100 @@
+.install-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  max-width: 468px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 90;
+  animation: install-banner-in 0.35s ease-out;
+}
+
+/* Quando há barra de navegação inferior, o banner fica logo acima dela */
+.install-banner.with-nav {
+  bottom: calc(112px + env(safe-area-inset-bottom));
+}
+
+.install-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.install-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.install-banner-text strong {
+  color: var(--primary-navy);
+  font-size: 13.5px;
+}
+
+.install-share-icon {
+  display: inline-block;
+  vertical-align: -3px;
+  color: var(--primary-navy);
+}
+
+.install-banner-action {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary-navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.install-banner-action:disabled {
+  opacity: 0.6;
+}
+
+.install-banner-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+@keyframes install-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-banner {
+    animation: none;
+  }
+}

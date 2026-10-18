@@ -12,6 +12,8 @@ import './PasswordField.css'
  * @param {boolean} [props.required=false] - Indica se o campo é obrigatório.
  * @param {boolean} [props.disabled=false] - Indica se o campo está desabilitado.
  * @param {string} [props.label='Senha'] - Texto acessível do label (invisível na tela).
+ * @param {string} [props.autoComplete='current-password'] - Dica para gerenciadores de senha (use 'new-password' em cadastros).
+ * @param {number} [props.minLength] - Tamanho mínimo aceito pelo campo.
  */
 export default function PasswordField({
   value,
@@ -20,7 +22,9 @@ export default function PasswordField({
   id = 'password',
   required = false,
   disabled = false,
-  label = 'Senha'
+  label = 'Senha',
+  autoComplete = 'current-password',
+  minLength
 }) {
   const [showPassword, setShowPassword] = useState(false)
 
@@ -37,6 +41,10 @@ export default function PasswordField({
         onChange={onChange}
         required={required}
         disabled={disabled}
+        autoComplete={autoComplete}
+        minLength={minLength}
+        autoCapitalize="none"
+        autoCorrect="off"
       />
       <button
         type="button"

@@ -1,0 +1,64 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 32px 24px;
+  color: var(--text-muted);
+}
+
+.error-state.full-screen {
+  min-height: 100dvh;
+  justify-content: center;
+  background: var(--bg-main);
+  padding-top: calc(32px + env(safe-area-inset-top));
+}
+
+.error-state-icon {
+  color: var(--accent-color);
+}
+
+.error-state h2 {
+  font-size: 18px;
+  color: var(--primary-navy);
+  font-weight: 800;
+}
+
+.error-state p {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.error-state-retry {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.error-state-retry:active {
+  transform: scale(0.98);
+}
+
+/* Faixa "sem conexão" */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+  background: #92400e;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}

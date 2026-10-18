@@ -3,6 +3,7 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background-color: #183672; /* Cor azul extraída exatamente do logo */
   position: fixed;
@@ -22,7 +23,7 @@
   width: 220px;
   height: 220px;
   object-fit: contain;
-  animation: fade-scale-in 2s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  animation: fade-scale-in 0.9s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
   /* Se a imagem enviada já tiver fundo transparente, ela se mesclará naturalmente.
      Se não, o usuário precisará substituí-la por um PNG transparente no diretório public. */
 }

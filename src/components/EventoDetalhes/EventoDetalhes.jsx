@@ -1,68 +1,104 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { attendanceService } from '../../services/api'
+import { getEventStatus } from '../../utils/events'
 import MapPreview from '../common/MapPreview/MapPreview'
 import ChatBoard from '../ChatBoard/ChatBoard'
+import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
+import ErrorState from '../common/ErrorState/ErrorState'
 import './EventoDetalhes.css'
 
 /**
- * Componente que exibe os detalhes de um evento específico selecionado.
+ * Componente que exibe os detalhes de um evento específico (identificado pelo :id da URL).
  */
 export default function EventoDetalhes() {
   const {
-    selectedEvent,
+    eventos,
+    eventosLoaded,
+    eventosError,
+    reloadEvents,
     user,
     confirmarPresenca,
-    cancelarPresenca,
-    presencas
+    cancelarPresenca
   } = useAppContext()
 
+  const { id } = useParams()
   const navigate = useNavigate()
 
   const [showAttendees, setShowAttendees] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [attendees, setAttendees] = useState([])
 
-  if (!selectedEvent) return null
+  const selectedEvent = eventos.find(e => String(e.id) === String(id))
+  const eventId = selectedEvent?.id
+
+  const loadAttendees = useCallback(async () => {
+    if (eventId === undefined) return
+    try {
+      setAttendees(await attendanceService.fetchMeetingAttendees(eventId))
+    } catch (err) {
+      console.error('Erro ao carregar presenças', err)
+    }
+  }, [eventId])
+
+  useEffect(() => {
+    loadAttendees()
+  }, [loadAttendees])
+
+  const goBack = () => navigate(window.history.state?.idx > 0 ? -1 : '/')
+
+  if (!selectedEvent) {
+    if (!eventosLoaded) {
+      return (
+        <div className="page">
+          {eventosError ? (
+            <ErrorState message={eventosError} onRetry={() => reloadEvents()} />
+          ) : (
+            <LoadingSpinner message="Carregando evento..." />
+          )}
+        </div>
+      )
+    }
+    return (
+      <div className="page">
+        <ErrorState
+          title="Evento não encontrado"
+          message="Este evento não existe mais ou foi removido."
+          retryLabel="Ver programação"
+          onRetry={() => navigate('/')}
+        />
+      </div>
+    )
+  }
 
   const jaConfirmado = user?.eventosConfirmados?.some(id => String(id) === String(selectedEvent.id)) || false
 
-  const isPastEvent = (() => {
-    const raw = selectedEvent.raw_date
-    if (!raw) return false
-    let eventDateTime
-    if (String(raw).includes('T')) {
-      // raw_date já contém data e hora (ISO)
-      eventDateTime = new Date(raw)
-    } else {
-      const [y, m, d] = String(raw).split('-').map(Number)
-      const [h, min] = (selectedEvent.hora || '23:59').split(':').map(Number)
-      eventDateTime = new Date(y, m - 1, d, h, min)
-    }
-    if (isNaN(eventDateTime.getTime())) return false
-    return eventDateTime < new Date()
-  })()
-
-  const isHappeningNow = (() => {
-    if (!selectedEvent.raw_date) return false;
-    const eventDate = new Date(selectedEvent.raw_date);
-    const currTime = new Date();
-    return eventDate <= currTime && currTime.getTime() - eventDate.getTime() < 4 * 60 * 60 * 1000;
-  })();
+  const status = getEventStatus(selectedEvent.raw_date)
+  const isPastEvent = status === 'past'
+  const isHappeningNow = status === 'live'
 
   const handleConfirmar = async () => {
     setIsLoading(true)
-    await confirmarPresenca(selectedEvent.id)
-    setIsLoading(false)
+    try {
+      await confirmarPresenca(selectedEvent.id)
+      await loadAttendees()
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCancelar = async () => {
     setIsLoading(true)
-    await cancelarPresenca(selectedEvent.id)
-    setIsLoading(false)
+    try {
+      await cancelarPresenca(selectedEvent.id)
+      await loadAttendees()
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const eventAttendees = presencas
-    .filter(p => p.meeting_id === selectedEvent.id)
+  const eventAttendees = attendees
 
   return (
     <div className="page">
@@ -71,7 +107,7 @@ export default function EventoDetalhes() {
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">
-        <button onClick={() => navigate(-1)} className="back-btn" aria-label="Voltar">
+        <button onClick={goBack} className="back-btn" aria-label="Voltar">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <h1>Detalhes do Evento</h1>
@@ -195,7 +231,7 @@ export default function EventoDetalhes() {
                     className="modal-attendee-avatar"
                     style={att.avatar_url ? { backgroundImage: `url(${att.avatar_url})` } : {}}
                   >
-                    {!att.avatar_url && att.user_name.charAt(0).toUpperCase()}
+                    {!att.avatar_url && (att.user_name || '?').charAt(0).toUpperCase()}
                   </div>
                   <span>{att.user_name}</span>
                 </div>

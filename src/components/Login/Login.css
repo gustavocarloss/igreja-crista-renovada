@@ -2,11 +2,12 @@
 
 .login-container {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--grad-navy);
-  padding: 24px;
+  padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
   position: relative;
   overflow: hidden;
 }
