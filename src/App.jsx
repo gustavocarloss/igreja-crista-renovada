@@ -99,6 +99,8 @@ function App() {
         type={modalConfig.type}
         onClose={closeModal}
         onConfirm={modalConfig.onConfirm}
+        confirmLabel={modalConfig.confirmLabel}
+        cancelLabel={modalConfig.cancelLabel}
       />
     </div>
   )

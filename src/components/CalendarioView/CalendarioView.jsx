@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
+import { getEventStatus } from '../../utils/events'
 import './CalendarioView.css'
 
 /**
@@ -10,6 +11,14 @@ export default function CalendarioView() {
   const { eventos } = useAppContext()
   const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDay, setSelectedDay] = useState(null)
+
+  useEffect(() => {
+    if (!selectedDay) return undefined
+    const onKey = (e) => e.key === 'Escape' && setSelectedDay(null)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [selectedDay])
 
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate()
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay()
@@ -50,9 +59,13 @@ export default function CalendarioView() {
     if (dayEvents.length === 1) {
       navigate(`/detalhes/${dayEvents[0].id}`)
     } else if (dayEvents.length > 1) {
-      navigate('/')
+      setSelectedDay(day)
     }
   }
+
+  const selectedDayEvents = selectedDay
+    ? getEventsForDay(selectedDay).sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
+    : []
 
   const monthEvents = eventos
     .filter(e => {
@@ -102,7 +115,13 @@ export default function CalendarioView() {
                 aria-label={day && hasEvents ? `${day} de ${monthNames[month]} com evento` : undefined}
               >
                 <span className="day-number">{day}</span>
-                {hasEvents && <div className="event-indicator" data-testid="indicator"></div>}
+                {hasEvents && (
+                  dayEvents.length > 1 ? (
+                    <span className="event-count" data-testid="indicator">{dayEvents.length}</span>
+                  ) : (
+                    <div className="event-indicator" data-testid="indicator"></div>
+                  )
+                )}
               </div>
             )
           })}
@@ -134,6 +153,55 @@ export default function CalendarioView() {
           )}
         </div>
       </div>
+
+      {selectedDay && (
+        <div className="day-sheet-overlay" onClick={() => setSelectedDay(null)}>
+          <div
+            className="day-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="day-sheet-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="day-sheet-header">
+              <div>
+                <span className="day-sheet-kicker">{selectedDayEvents.length} eventos</span>
+                <h3 id="day-sheet-title">{selectedDay} de {monthNames[month]}</h3>
+              </div>
+              <button className="close-modal-btn" onClick={() => setSelectedDay(null)} aria-label="Fechar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <div className="day-sheet-body">
+              {selectedDayEvents.map((evento) => {
+                const status = getEventStatus(evento.raw_date)
+                return (
+                  <div key={evento.id} className={`day-event-card ${status === 'past' ? 'past' : ''}`}>
+                    <div className="day-event-head">
+                      <h4>{evento.nome}</h4>
+                      {status === 'past' && <span className="day-badge past">Encerrado</span>}
+                      {status === 'live' && evento.aoVivo && <span className="day-badge live">AO VIVO</span>}
+                    </div>
+                    <p className="day-event-info">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                      {evento.hora}
+                    </p>
+                    {evento.local && (
+                      <p className="day-event-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                        {evento.local}
+                      </p>
+                    )}
+                    <button className="day-event-btn" onClick={() => navigate(`/detalhes/${evento.id}`)}>
+                      Ver detalhes
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

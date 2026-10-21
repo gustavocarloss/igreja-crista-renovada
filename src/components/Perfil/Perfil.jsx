@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 import { authService, supabase } from '../../services/api'
+import { getEventStatus } from '../../utils/events'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import './Perfil.css'
 
@@ -9,7 +10,7 @@ import './Perfil.css'
  * Componente que exibe o perfil do usuário logado, seus eventos confirmados e logout.
  */
 export default function Perfil() {
-  const { user, setUser, eventos, setSelectedEvent, atualizarAvatar, showMessage } = useAppContext()
+  const { user, setUser, eventos, atualizarAvatar, showMessage } = useAppContext()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
 
@@ -37,21 +38,18 @@ export default function Perfil() {
   )
 
   const now = new Date()
-  const futureEvents = eventosConfirmados.filter(e => {
-    if (!e.raw_date) return true
-    return new Date(e.raw_date) >= new Date(now.getTime() - 4 * 60 * 60 * 1000)
-  }).sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
+  const futureEvents = eventosConfirmados
+    .filter(e => getEventStatus(e.raw_date, now) !== 'past')
+    .sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date))
 
-  const pastEvents = eventosConfirmados.filter(e => {
-    if (!e.raw_date) return false
-    return new Date(e.raw_date) < new Date(now.getTime() - 4 * 60 * 60 * 1000)
-  }).sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date))
+  const pastEvents = eventosConfirmados
+    .filter(e => e.raw_date && getEventStatus(e.raw_date, now) === 'past')
+    .sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date))
 
   const [showHistory, setShowHistory] = useState(false)
 
   const handleVerDetalhes = (evento) => {
-    setSelectedEvent(evento)
-    navigate('/detalhes')
+    navigate(`/detalhes/${evento.id}`)
   }
 
   const handleLogout = async () => {

@@ -9,7 +9,15 @@ import './MessageModal.css'
  * @param {'error'|'success'} [props.type='error'] - Tipo do modal que define o ícone e título (Ops! ou Sucesso!).
  * @param {Function} props.onClose - Função disparada ao fechar o modal.
  */
-export default function MessageModal({ isOpen, message, type = 'error', onClose, onConfirm }) {
+export default function MessageModal({
+  isOpen,
+  message,
+  type = 'error',
+  onClose,
+  onConfirm,
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar'
+}) {
   if (!isOpen) return null
 
   const isError = type === 'error'
@@ -35,8 +43,8 @@ export default function MessageModal({ isOpen, message, type = 'error', onClose,
         
         {isConfirm ? (
           <div className="modal-buttons-row">
-            <button className="modal-btn-cancel" onClick={onClose}>Cancelar</button>
-            <button className="modal-btn-confirm" onClick={onConfirm}>Confirmar</button>
+            <button className="modal-btn-cancel" onClick={onClose}>{cancelLabel}</button>
+            <button className="modal-btn-confirm" onClick={onConfirm}>{confirmLabel}</button>
           </div>
         ) : (
           <button className="modal-close-btn" onClick={onClose}>

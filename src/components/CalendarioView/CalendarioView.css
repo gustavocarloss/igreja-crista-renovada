@@ -163,3 +163,163 @@
   color: var(--accent-gold);
   opacity: 0.5;
 }
+
+/* Contador para dias com 2+ eventos */
+.event-count {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--primary-navy);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* --- Janela flutuante com os eventos do dia --- */
+.day-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 34, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  animation: dayFade 0.2s ease-out;
+}
+
+.day-sheet {
+  background: var(--bg-main);
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -10px 30px rgba(12, 50, 110, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: daySlide 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+@media (min-width: 600px) {
+  .day-sheet-overlay { align-items: center; padding: 24px; }
+  .day-sheet { border-radius: 24px; }
+}
+
+.day-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 12px;
+}
+
+.day-sheet-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.day-sheet-header h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin: 0;
+}
+
+.day-sheet-body {
+  padding: 4px 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-event-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary-navy);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.day-event-card.past {
+  border-left-color: #9ca3af;
+}
+
+.day-event-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.day-event-head h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.day-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.day-badge.past { background: #f3f4f6; color: #6b7280; }
+.day-badge.live { background: var(--danger); color: #fff; }
+
+.day-event-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.day-event-info svg { flex-shrink: 0; }
+
+.day-event-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--grad-navy);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.day-event-btn:hover {
+  box-shadow: 0 6px 14px rgba(24, 54, 114, 0.25);
+}
+
+.day-event-btn:active {
+  transform: scale(0.98);
+}
+
+@keyframes dayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes daySlide {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

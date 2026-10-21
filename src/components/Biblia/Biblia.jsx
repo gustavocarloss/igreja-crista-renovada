@@ -12,12 +12,12 @@ export default function Biblia() {
   const [versiculos, setVersiculos] = useState([])
   const [loading, setLoading] = useState(false)
   const [busca, setBusca] = useState('')
+  const [pastaAberta, setPastaAberta] = useState(null)
 
   const handleLivroClick = (livro) => {
     setLivroSelecionado(livro)
     setCapituloSelecionado(null)
     setVersiculos([])
-    setBusca('')
   }
 
   const handleCapituloClick = async (capitulo) => {
@@ -50,11 +50,6 @@ export default function Biblia() {
       setLivroSelecionado(null)
     }
   }
-
-  const resultadosBusca = busca ?
-    livros.filter(livro =>
-      livro.name.toLowerCase().includes(busca.toLowerCase())
-    ) : livros
 
   // RENDERIZAÇÃO: NÍVEL 3 (LEITURA DE VERSÍCULOS)
   if (livroSelecionado && capituloSelecionado) {
@@ -167,7 +162,17 @@ export default function Biblia() {
     )
   }
 
-  // RENDERIZAÇÃO: NÍVEL 1 (ESCOLHA DE LIVROS)
+  // RENDERIZAÇÃO: NÍVEL 1 (PASTAS DOS TESTAMENTOS + LIVROS)
+  const termo = busca.trim().toLowerCase()
+  const testamentos = [
+    { id: 'at', nome: 'Antigo Testamento', livros: livros.slice(0, 39) },
+    { id: 'nt', nome: 'Novo Testamento', livros: livros.slice(39) }
+  ].map(t => ({
+    ...t,
+    filtrados: termo ? t.livros.filter(l => l.name.toLowerCase().includes(termo)) : t.livros
+  }))
+  const semResultados = termo && testamentos.every(t => t.filtrados.length === 0)
+
   return (
     <div className="page">
       <div className="top-header-bar">
@@ -179,27 +184,61 @@ export default function Biblia() {
       </header>
 
       <div className="busca-container">
+        <svg className="busca-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
         <input
-          type="text"
+          type="search"
           placeholder="Buscar livro..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="busca-input"
+          aria-label="Buscar livro"
         />
       </div>
 
       <div className="livros-secao">
-        <div className="livros-grid">
-          {resultadosBusca.map(livro => (
-            <div
-              key={livro.id}
-              className="livro-item"
-              onClick={() => handleLivroClick(livro)}
-            >
-              {livro.name}
-            </div>
-          ))}
-        </div>
+        {semResultados && <p className="instrucao">Nenhum livro encontrado para "{busca}".</p>}
+        {testamentos.map(t => {
+          if (termo && t.filtrados.length === 0) return null
+          // Durante a busca, as pastas com resultado abrem sozinhas.
+          const aberto = termo ? true : pastaAberta === t.id
+          return (
+            <section key={t.id} className={`testamento-pasta ${aberto ? 'aberta' : ''}`}>
+              <button
+                type="button"
+                className="testamento-header"
+                onClick={() => setPastaAberta(aberto && !termo ? null : t.id)}
+                aria-expanded={aberto}
+              >
+                <span className="testamento-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+                </span>
+                <span className="testamento-text">
+                  <strong>{t.nome}</strong>
+                  <small>
+                    {termo ? `${t.filtrados.length} de ${t.livros.length} livros` : `${t.livros.length} livros`}
+                  </small>
+                </span>
+                <svg className="testamento-chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+              </button>
+              {aberto && (
+                <div className="livros-grid testamento-livros">
+                  {t.filtrados.map(livro => (
+                    <div
+                      key={livro.id}
+                      className="livro-item"
+                      onClick={() => handleLivroClick(livro)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleLivroClick(livro) }}
+                    >
+                      {livro.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )
+        })}
       </div>
     </div>
   )

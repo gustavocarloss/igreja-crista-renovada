@@ -1,7 +1,7 @@
 import { extractLocalDateAndTime } from './date'
 
-/** Um evento é considerado "ao vivo" por 4h depois do horário de início. */
-export const LIVE_WINDOW_MS = 4 * 60 * 60 * 1000
+/** Um evento é considerado "em andamento" por 2h depois do horário de início; depois disso sai da home. */
+export const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000
 
 /**
  * Regra ÚNICA de status de evento, usada em todas as telas.

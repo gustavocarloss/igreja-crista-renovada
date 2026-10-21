@@ -9,6 +9,7 @@ describe('Componente Biblia', () => {
 
   it('deve renderizar a tela de seleção de livros e permitir a busca', () => {
     render(<Biblia />)
+    fireEvent.click(screen.getByText('Antigo Testamento'))
 
     expect(screen.getByRole('heading', { name: /bíblia sagrada/i })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/buscar livro.../i)).toBeInTheDocument()
@@ -30,6 +31,7 @@ describe('Componente Biblia', () => {
 
   it('deve exibir a lista de capítulos ao selecionar um livro', () => {
     render(<Biblia />)
+    fireEvent.click(screen.getByText('Antigo Testamento'))
 
     const genesisItem = screen.getByText('Gênesis')
     fireEvent.click(genesisItem)
@@ -57,6 +59,7 @@ describe('Componente Biblia', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<Biblia />)
+    fireEvent.click(screen.getByText('Antigo Testamento'))
 
     // Selecionar Gênesis
     fireEvent.click(screen.getByText('Gênesis'))

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate, useParams } from 'react-router-dom'
 import MapPreview from '../common/MapPreview/MapPreview'
+import LocationInput from '../common/LocationInput/LocationInput'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import ErrorState from '../common/ErrorState/ErrorState'
 import './AdicionarEvento.css'
@@ -27,7 +28,8 @@ export default function AdicionarEvento() {
     reloadEvents,
     adicionarEvento,
     atualizarEvento,
-    showMessage
+    showMessage,
+    confirmAsync
   } = useAppContext()
   const navigate = useNavigate()
   const { id } = useParams()
@@ -38,11 +40,33 @@ export default function AdicionarEvento() {
   const [novoEvento, setNovoEvento] = useState(EMPTY_EVENT)
   const [isSaving, setIsSaving] = useState(false)
   const [filledFor, setFilledFor] = useState(null)
+  const [initialForm, setInitialForm] = useState(EMPTY_EVENT)
+
+  // Locais únicos já usados em eventos anteriores (mais recentes primeiro)
+  const usedLocations = [...new Set(
+    [...eventos]
+      .sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date))
+      .map(e => (e.local || '').trim())
+      .filter(Boolean)
+  )]
+
+  const isDirty = JSON.stringify(novoEvento) !== JSON.stringify(initialForm)
+
+  const handleVoltar = async () => {
+    if (isDirty) {
+      const descartar = await confirmAsync('Deseja descartar as alterações?', {
+        confirmLabel: 'Sim',
+        cancelLabel: 'Não'
+      })
+      if (!descartar) return
+    }
+    navigate('/')
+  }
 
   // Preenche o formulário uma única vez com os dados do evento em edição
   useEffect(() => {
     if (editingEvent && filledFor !== editingEvent.id) {
-      setNovoEvento({
+      const filled = {
         nome: editingEvent.nome || '',
         link: editingEvent.link || '',
         local: editingEvent.local || '',
@@ -50,7 +74,9 @@ export default function AdicionarEvento() {
         hora: editingEvent.hora || '',
         descricao: editingEvent.descricao || '',
         pastor: editingEvent.pastor || ''
-      })
+      }
+      setNovoEvento(filled)
+      setInitialForm(filled)
       setFilledFor(editingEvent.id)
     }
   }, [editingEvent, filledFor])
@@ -124,6 +150,9 @@ export default function AdicionarEvento() {
         <span className="header-title">Igreja Cristã Renovada</span>
       </div>
       <header className="page-header">
+        <button type="button" onClick={handleVoltar} className="back-btn" aria-label="Voltar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
         <h1>{editingEvent ? 'Editar Evento' : 'Adicionar Evento'}</h1>
       </header>
 
@@ -148,12 +177,11 @@ export default function AdicionarEvento() {
         <div className="input-group">
           <label htmlFor="event-local">Local do Evento</label>
           <div className="location-input-row">
-            <input
+            <LocationInput
               id="event-local"
-              type="text"
-              placeholder="Ex: Rua das Flores, 123, São Paulo"
               value={novoEvento.local}
-              onChange={(e) => setNovoEvento({ ...novoEvento, local: e.target.value })}
+              onChange={(local) => setNovoEvento(prev => ({ ...prev, local }))}
+              usedLocations={usedLocations}
               required
             />
           </div>

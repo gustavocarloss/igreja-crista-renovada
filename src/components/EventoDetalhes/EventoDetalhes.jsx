@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate, useParams } from 'react-router-dom'
 import { attendanceService } from '../../services/api'
@@ -20,7 +20,8 @@ export default function EventoDetalhes() {
     reloadEvents,
     user,
     confirmarPresenca,
-    cancelarPresenca
+    cancelarPresenca,
+    excluirEvento
   } = useAppContext()
 
   const { id } = useParams()
@@ -29,6 +30,23 @@ export default function EventoDetalhes() {
   const [showAttendees, setShowAttendees] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [attendees, setAttendees] = useState([])
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  // Fecha o menu de ações ao tocar/clicar fora dele (ou apertar Esc).
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onPointerDown = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    const onKey = (e) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   const selectedEvent = eventos.find(e => String(e.id) === String(id))
   const eventId = selectedEvent?.id
@@ -99,6 +117,18 @@ export default function EventoDetalhes() {
   }
 
   const eventAttendees = attendees
+  const isAdmin = user?.role === 'admin'
+
+  const handleEditar = () => {
+    setMenuOpen(false)
+    navigate(`/editar/${selectedEvent.id}`)
+  }
+
+  const handleExcluir = async () => {
+    setMenuOpen(false)
+    const ok = await excluirEvento(selectedEvent.id)
+    if (ok) navigate('/', { replace: true })
+  }
 
   return (
     <div className="page">
@@ -111,6 +141,32 @@ export default function EventoDetalhes() {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <h1>Detalhes do Evento</h1>
+        {isAdmin && (
+          <div className="evento-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="evento-menu-btn"
+              aria-label="Mais opções"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
+            </button>
+            {menuOpen && (
+              <div className="evento-menu-popover" role="menu">
+                <button type="button" role="menuitem" onClick={handleEditar}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  Editar evento
+                </button>
+                <button type="button" role="menuitem" className="danger" onClick={handleExcluir}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                  Excluir evento
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="detalhes-container">
@@ -148,18 +204,10 @@ export default function EventoDetalhes() {
               <div className="detalhe-content">
                 <label>Localização</label>
                 <p>{selectedEvent.local}</p>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedEvent.local)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="maps-link"
-                >
-                  Abrir no Google Maps
-                </a>
               </div>
             </div>
 
-            <MapPreview local={selectedEvent.local} height={180} title="Mapa do Evento" />
+            <MapPreview local={selectedEvent.local} height={180} title="Mapa do Evento" linkToMaps />
 
             <div className="detalhe-row no-icon">
               <div className="detalhe-content">

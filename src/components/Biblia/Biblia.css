@@ -236,3 +236,99 @@
   transform: scale(0.97);
   border-color: var(--accent-color);
 }
+
+/* --- Busca com lupa --- */
+.busca-container {
+  position: relative;
+}
+
+.busca-icon {
+  position: absolute;
+  left: 16px;
+  top: 17px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.busca-container .busca-input {
+  padding-left: 48px;
+  margin-bottom: 24px;
+}
+
+/* --- Pastas dos testamentos --- */
+.testamento-pasta {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.testamento-pasta.aberta {
+  box-shadow: var(--shadow-md);
+}
+
+.testamento-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-main);
+}
+
+.testamento-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--grad-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(24, 54, 114, 0.25);
+}
+
+.testamento-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.testamento-text strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-navy);
+}
+
+.testamento-text small {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.testamento-chevron {
+  color: var(--text-muted);
+  transition: transform 0.25s;
+}
+
+.testamento-pasta.aberta .testamento-chevron {
+  transform: rotate(180deg);
+}
+
+.testamento-livros {
+  padding: 4px 16px 18px;
+  animation: pastaAbrir 0.22s ease-out;
+}
+
+@keyframes pastaAbrir {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

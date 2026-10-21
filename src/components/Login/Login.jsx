@@ -17,6 +17,13 @@ export default function Login({ onLogin, onShowRegister }) {
     senha: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [rememberMe, setRememberMe] = useState(() => {
+    try {
+      return localStorage.getItem('icr-remember-me') !== '0'
+    } catch {
+      return true
+    }
+  })
   const [verse, setVerse] = useState('')
 
   useEffect(() => {
@@ -28,7 +35,7 @@ export default function Login({ onLogin, onShowRegister }) {
     if (formData.email && formData.senha) {
       setIsSubmitting(true)
       try {
-        await onLogin(formData)
+        await onLogin(formData, rememberMe)
       } finally {
         setIsSubmitting(false)
       }
@@ -70,6 +77,16 @@ export default function Login({ onLogin, onShowRegister }) {
             required
             disabled={isSubmitting}
           />
+          <div className="remember-me-container">
+            <input
+              type="checkbox"
+              id="remember-me"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={isSubmitting}
+            />
+            <label htmlFor="remember-me">Lembrar de mim</label>
+          </div>
           <button type="submit" className="login-btn" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>

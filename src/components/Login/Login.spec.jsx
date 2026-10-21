@@ -50,7 +50,7 @@ describe('Componente Login', () => {
     expect(handleLogin).toHaveBeenCalledWith({
       email: 'test@igreja.com',
       senha: 'senha123'
-    })
+    }, true)
 
     // Deve desabilitar inputs durante a submissão
     expect(botaoEntrar).toBeDisabled()

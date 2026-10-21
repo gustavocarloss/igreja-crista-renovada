@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { chatService } from '../../services/api'
 import { useAppContext } from '../../context/AppContext'
 import { friendlyError } from '../../utils/errors'
+import { sanitizeChatImage, isSafeChatImage } from '../../utils/chatImage'
 import './ChatBoard.css'
 
 const POLL_INTERVAL_MS = 5000
@@ -27,8 +28,12 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  const [pendingImage, setPendingImage] = useState(null)
+  const [isPreparingImage, setIsPreparingImage] = useState(false)
+  const [viewImage, setViewImage] = useState(null)
 
   const containerRef = useRef(null)
+  const fileInputRef = useRef(null)
   const stickToBottomRef = useRef(true)
   const lastCreatedAtRef = useRef(null)
   const requestedAvatarsRef = useRef(new Set())
@@ -102,20 +107,37 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
     stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
   }
 
+  const handlePickImage = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite escolher o mesmo arquivo de novo
+    if (!file) return
+    setIsPreparingImage(true)
+    try {
+      setPendingImage(await sanitizeChatImage(file))
+    } catch (err) {
+      showMessage(err.message || 'Não foi possível usar esta imagem.')
+    } finally {
+      setIsPreparingImage(false)
+    }
+  }
+
   const handleSend = async (e) => {
     e.preventDefault()
     const text = inputText.trim()
-    if (!text || !user || isSending) return
+    if ((!text && !pendingImage) || !user || isSending) return
 
     setIsSending(true)
     try {
-      const { data } = await chatService.sendMessage({
+      const payload = {
         meeting_id: meetingId,
         user_id: user.id,
         user_name: user.nome,
         text: text.slice(0, MAX_MESSAGE_LENGTH)
-      })
+      }
+      if (pendingImage) payload.image_url = pendingImage
+      const { data } = await chatService.sendMessage(payload)
       setInputText('')
+      setPendingImage(null)
       stickToBottomRef.current = true
       if (data?.length) {
         lastCreatedAtRef.current = data[data.length - 1].created_at
@@ -162,8 +184,13 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
                 )}
                 <div className="chat-bubble-container">
                   {!isMine && <span className="chat-user-name">{name}</span>}
-                  <div className="chat-bubble">
-                    {msg.text}
+                  <div className={`chat-bubble ${isSafeChatImage(msg.image_url) ? 'has-image' : ''}`}>
+                    {isSafeChatImage(msg.image_url) && (
+                      <button type="button" className="chat-image-btn" onClick={() => setViewImage(msg.image_url)} aria-label="Ampliar imagem">
+                        <img src={msg.image_url} alt={`Imagem enviada por ${name}`} className="chat-image" loading="lazy" />
+                      </button>
+                    )}
+                    {msg.text && <span>{msg.text}</span>}
                   </div>
                   <span className="chat-time">
                     {new Date(msg.created_at).toLocaleString('pt-BR', {
@@ -182,22 +209,57 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
         )}
       </div>
 
+      {pendingImage && (
+        <div className="chat-pending-image">
+          <img src={pendingImage} alt="Pré-visualização da imagem" />
+          <span>Imagem pronta para enviar</span>
+          <button type="button" onClick={() => setPendingImage(null)} aria-label="Remover imagem">×</button>
+        </div>
+      )}
+
       <form className="chat-input-area" onSubmit={handleSend}>
         <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onChange={handlePickImage}
+          hidden
+        />
+        <button
+          type="button"
+          className="chat-attach-btn"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isSending || isPreparingImage || !user}
+          aria-label="Enviar foto"
+          title="Enviar foto"
+        >
+          {isPreparingImage ? (
+            <span className="chat-attach-spinner" />
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          )}
+        </button>
+        <input
           type="text"
-          placeholder={isPastEvent ? "Este evento já encerrou." : "Digite sua mensagem..."}
+          placeholder="Digite sua mensagem..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          disabled={isSending || !user || isPastEvent}
+          disabled={isSending || !user}
           maxLength={MAX_MESSAGE_LENGTH}
           enterKeyHint="send"
           autoComplete="off"
           aria-label="Mensagem"
         />
-        <button type="submit" disabled={!inputText.trim() || isSending || !user || isPastEvent} className="chat-send-btn" aria-label="Enviar mensagem">
+        <button type="submit" disabled={(!inputText.trim() && !pendingImage) || isSending || !user} className="chat-send-btn" aria-label="Enviar mensagem">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </form>
+
+      {viewImage && (
+        <div className="chat-image-viewer" onClick={() => setViewImage(null)} role="dialog" aria-label="Imagem ampliada">
+          <img src={viewImage} alt="Imagem ampliada" />
+        </div>
+      )}
     </div>
   )
 }

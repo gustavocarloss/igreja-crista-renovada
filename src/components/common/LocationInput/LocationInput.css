@@ -1,0 +1,66 @@
+.location-input {
+  position: relative;
+  width: 100%;
+}
+
+.location-input input {
+  width: 100%;
+}
+
+.location-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  max-height: 280px;
+  overflow-y: auto;
+  animation: popIn 0.15s ease-out;
+  transform-origin: top center;
+}
+
+.location-group {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 6px 10px 4px;
+}
+
+.location-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.location-option:hover,
+.location-option.active {
+  background: var(--accent-soft);
+}
+
+.location-icon {
+  color: var(--primary-navy);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.location-loading {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}

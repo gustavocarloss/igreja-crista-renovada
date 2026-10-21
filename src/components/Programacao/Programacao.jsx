@@ -1,6 +1,7 @@
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 import { getEventStatus } from '../../utils/events'
+import useNow from '../../hooks/useNow'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import ErrorState from '../common/ErrorState/ErrorState'
 import './Programacao.css'
@@ -23,7 +24,7 @@ export default function Programacao() {
     navigate(`/detalhes/${evento.id}`)
   }
 
-  const now = new Date()
+  const now = useNow()
   const statusOf = (evento) => getEventStatus(evento.raw_date, now)
 
   // Em andamento (até 4h após o início) + futuros

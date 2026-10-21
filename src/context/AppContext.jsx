@@ -10,6 +10,27 @@ const AppContext = createContext()
 /** Se o app ficar em segundo plano por mais que isso, atualizamos os eventos ao voltar. */
 const STALE_AFTER_MS = 2 * 60 * 1000
 
+/** "Lembrar de mim": '0' em localStorage = encerrar a sessão quando o navegador/app for fechado. */
+const REMEMBER_KEY = 'icr-remember-me'
+const SESSION_ALIVE_KEY = 'icr-session-alive'
+
+const shouldDropSession = () => {
+  try {
+    return localStorage.getItem(REMEMBER_KEY) === '0' && !sessionStorage.getItem(SESSION_ALIVE_KEY)
+  } catch {
+    return false
+  }
+}
+
+const saveRememberChoice = (remember) => {
+  try {
+    localStorage.setItem(REMEMBER_KEY, remember ? '1' : '0')
+    sessionStorage.setItem(SESSION_ALIVE_KEY, '1')
+  } catch {
+    // armazenamento indisponível (modo privado): segue com o padrão do Supabase
+  }
+}
+
 export const useAppContext = () => {
   const context = useContext(AppContext)
   if (!context) {
@@ -61,12 +82,14 @@ export function AppProvider({ children }) {
     setModalConfig((prev) => ({ ...prev, isOpen: false }))
   }
 
-  const confirmAsync = (message) => {
+  const confirmAsync = (message, { confirmLabel, cancelLabel } = {}) => {
     return new Promise((resolve) => {
       setModalConfig({
         isOpen: true,
         message,
         type: 'confirm',
+        confirmLabel,
+        cancelLabel,
         onConfirm: () => {
           setModalConfig((prev) => ({ ...prev, isOpen: false }))
           resolve(true)
@@ -153,12 +176,21 @@ export function AppProvider({ children }) {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') return
+      if (event === 'INITIAL_SESSION') return // tratado pelo restore() abaixo
       // Não fazemos chamadas ao Supabase dentro do callback (evita deadlock); adiamos um tick.
       setTimeout(() => handleSession(session), 0)
     })
 
-    supabase.auth
-      .getSession()
+    const restore = async () => {
+      if (shouldDropSession()) {
+        // Usuário não marcou "Lembrar de mim" e o navegador foi fechado: começa deslogado.
+        await authService.signOut().catch(() => {})
+        return { data: { session: null } }
+      }
+      return supabase.auth.getSession()
+    }
+
+    restore()
       .then(({ data: { session } }) => handleSession(session))
       .catch((err) => {
         console.error('Erro ao recuperar sessão', err)
@@ -218,9 +250,10 @@ export function AppProvider({ children }) {
   }, [userId, loadEvents])
 
   // ---------- Ações de autenticação ----------
-  const handleLogin = async ({ email, senha }) => {
+  const handleLogin = async ({ email, senha }, rememberMe = true) => {
     try {
       const { authUser } = await authService.login(email.trim(), senha)
+      saveRememberChoice(rememberMe)
       await ensureProfile(authUser)
       navigate('/')
     } catch (err) {
@@ -376,7 +409,8 @@ export function AppProvider({ children }) {
     handleLogout,
     modalConfig,
     closeModal,
-    showMessage
+    showMessage,
+    confirmAsync
   }
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
