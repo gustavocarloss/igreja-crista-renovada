@@ -8,6 +8,14 @@ import { getKeyRole } from './src/utils/supabaseKey.js'
 const BRAND_COLOR = '#183672'
 
 /**
+ * Caminho público do site. No GitHub Pages o projeto é servido em
+ * https://<usuario>.github.io/<repositorio>/, então todos os links (assets, rotas,
+ * manifest PWA e service worker) precisam desse prefixo.
+ * Ao usar um domínio próprio, troque para '/'.
+ */
+const BASE_PATH = '/igreja-crista-renovada/'
+
+/**
  * Lê os headers de segurança do vercel.json para servir o mesmo CSP no `vite preview`.
  * Assim dá para testar localmente exatamente o que vai para produção.
  */
@@ -39,7 +47,7 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
-    base: '/',
+    base: BASE_PATH,
     plugins: [
       react(),
       VitePWA({
@@ -47,24 +55,24 @@ export default defineConfig(({ command, mode }) => {
         injectRegister: false, // o registro é feito em src/pwa/registerSW.js
         includeAssets: ['icr-logo.png', 'apple-touch-icon.png', 'favicon-16.png', 'favicon-32.png'],
         manifest: {
-          id: '/',
+          id: BASE_PATH,
           name: 'Igreja Cristã Renovada',
           short_name: 'ICR',
           description: 'Programação, agenda, Bíblia e comunidade da Igreja Cristã Renovada.',
           lang: 'pt-BR',
           dir: 'ltr',
-          start_url: '/',
-          scope: '/',
+          start_url: BASE_PATH,
+          scope: BASE_PATH,
           display: 'standalone',
           orientation: 'portrait',
           theme_color: BRAND_COLOR,
           background_color: BRAND_COLOR,
           categories: ['lifestyle', 'social'],
           icons: [
-            { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-            { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: '/icons/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-            { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: `${BASE_PATH}icons/icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: `${BASE_PATH}icons/icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: `${BASE_PATH}icons/icon-maskable-192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: `${BASE_PATH}icons/icon-maskable-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
@@ -74,7 +82,7 @@ export default defineConfig(({ command, mode }) => {
           skipWaiting: true,
           // Fallback offline: qualquer navegação sem internet recebe o "app shell" (index.html em cache),
           // e o próprio app mostra o aviso "sem conexão".
-          navigateFallback: '/index.html',
+          navigateFallback: `${BASE_PATH}index.html`,
           navigateFallbackDenylist: [/^\/api\//, /\.[a-z0-9]+$/i],
           runtimeCaching: [
             {
