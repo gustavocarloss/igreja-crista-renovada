@@ -54,6 +54,21 @@ describe('Componente ChatBoard', () => {
     expect(screen.getAllByRole('button', { name: /apagar/i })).toHaveLength(2)
   })
 
+  it('não permite apagar depois de 60 horas, nem para admin (como no WhatsApp)', async () => {
+    mockUser = { ...mockUser, role: 'admin' }
+    const hoursAgo = (h) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
+    mockFetchMessages.mockResolvedValue([
+      { id: 'velha', user_id: 1, user_name: 'Ana', text: 'Mensagem antiga', created_at: hoursAgo(61) },
+      { id: 'recente', user_id: 1, user_name: 'Ana', text: 'Mensagem recente', created_at: hoursAgo(59) }
+    ])
+    render(<ChatBoard meetingId={10} />)
+    await screen.findByText('Mensagem antiga')
+
+    const buttons = screen.getAllByRole('button', { name: /apagar/i })
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0].closest('.chat-message')).toHaveTextContent('Mensagem recente')
+  })
+
   it('apaga depois de confirmar', async () => {
     mockConfirmAsync.mockResolvedValue(true)
     mockDeleteMessage.mockResolvedValue(true)

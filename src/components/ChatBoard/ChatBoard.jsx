@@ -3,10 +3,16 @@ import { chatService } from '../../services/api'
 import { useAppContext } from '../../context/AppContext'
 import { friendlyError } from '../../utils/errors'
 import { sanitizeChatImage, isSafeChatImage } from '../../utils/chatImage'
+import useNow from '../../hooks/useNow'
 import './ChatBoard.css'
 
 const POLL_INTERVAL_MS = 5000
 const MAX_MESSAGE_LENGTH = 500
+/**
+ * Prazo para apagar uma mensagem, como o "apagar para todos" do WhatsApp (2 dias e 12 horas).
+ * Vale para todos, inclusive admins. O banco aplica a mesma regra (supabase-security.sql).
+ */
+const DELETE_WINDOW_MS = 60 * 60 * 60 * 1000
 
 const mergeMessages = (current, incoming) => {
   const known = new Set(current.map((m) => m.id))
@@ -23,6 +29,7 @@ const mergeMessages = (current, incoming) => {
  */
 export default function ChatBoard({ meetingId, isPastEvent }) {
   const { user, showMessage, confirmAsync } = useAppContext()
+  const now = useNow()
   const [messages, setMessages] = useState([])
   const [avatars, setAvatars] = useState({})
   const [inputText, setInputText] = useState('')
@@ -164,6 +171,8 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
   }
 
   const isAdmin = user?.role === 'admin'
+  const canDelete = (msg) =>
+    (msg.user_id === user?.id || isAdmin) && now.getTime() - new Date(msg.created_at).getTime() < DELETE_WINDOW_MS
 
   return (
     <div className="chat-board">
@@ -214,7 +223,7 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
                       hour: '2-digit',
                       minute: '2-digit'
                     }).replace(',', ' às')}
-                    {(isMine || isAdmin) && (
+                    {canDelete(msg) && (
                       <button type="button" className="chat-delete-btn" onClick={() => handleDelete(msg)}>
                         Apagar
                       </button>

@@ -15,7 +15,8 @@
 --   * Só admins criam, editam e excluem eventos.
 --   * Presença e mensagens só podem ser gravadas em nome de quem está logado.
 --     O nome exibido no chat vem do perfil (não dá para se passar por outra pessoa).
---   * O autor ou um admin pode apagar uma mensagem (moderação).
+--   * O autor ou um admin pode apagar uma mensagem até 60 horas depois do envio
+--     (mesmo prazo do "apagar para todos" do WhatsApp). Depois disso, ninguém apaga pelo app.
 -- =====================================================================================
 
 begin;
@@ -192,7 +193,10 @@ create policy "messages_select_members" on public.messages
 create policy "messages_insert_own" on public.messages
   for insert to authenticated with check (user_id = public.current_profile_id());
 create policy "messages_delete_own_or_admin" on public.messages
-  for delete to authenticated using (user_id = public.current_profile_id() or public.is_admin());
+  for delete to authenticated using (
+    (user_id = public.current_profile_id() or public.is_admin())
+    and created_at > now() - interval '60 hours'
+  );
 
 -- O nome exibido vem sempre do perfil e a data é sempre a do servidor
 -- (uma data falsa no futuro travaria a atualização do chat para todo mundo).
