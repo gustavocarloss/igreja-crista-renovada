@@ -19,9 +19,13 @@ jobs:
             echo "Secrets SUPABASE_URL e/ou SUPABASE_ANON_KEY não configurados."
             exit 1
           fi
-          curl --fail --silent --show-error \
-            "${SUPABASE_URL%/}/rest/v1/meeting?select=id&limit=1" \
+          # Chama a função keep_alive() (criada em supabase-security.sql): consulta o banco
+          # sem precisar liberar nenhuma tabela para quem não está logado.
+          curl --fail --silent --show-error -X POST \
+            "${SUPABASE_URL%/}/rest/v1/rpc/keep_alive" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'
           echo ""
           echo "Supabase ping OK"

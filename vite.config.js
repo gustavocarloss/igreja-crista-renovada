@@ -29,6 +29,40 @@ function readVercelHeaders() {
   }
 }
 
+/** Diretivas que o navegador ignora quando a CSP vem por <meta> (só valem como header HTTP). */
+const HEADER_ONLY_CSP = /^(frame-ancestors|report-uri|report-to|sandbox)\b/
+
+/**
+ * O GitHub Pages não permite configurar headers HTTP, então a CSP do vercel.json
+ * é embutida no index.html como <meta> no build. Só no build: o servidor de dev do Vite
+ * usa scripts inline (HMR) que a política bloquearia.
+ */
+function securityMetaPlugin(headers) {
+  return {
+    name: 'icr-security-meta',
+    apply: 'build',
+    transformIndexHtml(html) {
+      const metas = []
+      const csp = headers['Content-Security-Policy']
+      if (csp) {
+        const metaCsp = csp
+          .split(';')
+          .map((d) => d.trim())
+          .filter((d) => d && !HEADER_ONLY_CSP.test(d))
+          .join('; ')
+        metas.push(`<meta http-equiv="Content-Security-Policy" content="${metaCsp}" />`)
+      }
+      if (headers['Referrer-Policy']) {
+        metas.push(`<meta name="referrer" content="${headers['Referrer-Policy']}" />`)
+      }
+      // Logo depois do charset (que precisa ficar no início) e antes de qualquer recurso externo.
+      const charset = /<meta charset="[^"]*"\s*\/?>/i
+      if (!charset.test(html)) throw new Error('[build] index.html sem <meta charset>: não foi possível injetar a CSP.')
+      return html.replace(charset, (tag) => [tag, ...metas].join('\n    '))
+    },
+  }
+}
+
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
@@ -46,10 +80,13 @@ export default defineConfig(({ command, mode }) => {
     }
   }
 
+  const securityHeaders = readVercelHeaders()
+
   return {
     base: BASE_PATH,
     plugins: [
       react(),
+      securityMetaPlugin(securityHeaders),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: false, // o registro é feito em src/pwa/registerSW.js
@@ -122,7 +159,7 @@ export default defineConfig(({ command, mode }) => {
       }),
     ],
     preview: {
-      headers: readVercelHeaders(),
+      headers: securityHeaders,
     },
     test: {
       globals: true,

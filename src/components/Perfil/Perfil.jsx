@@ -1,16 +1,21 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
-import { authService, supabase } from '../../services/api'
+import { authService } from '../../services/api'
 import { getEventStatus } from '../../utils/events'
+import { resizeImageToDataUrl } from '../../utils/image'
+import { friendlyError } from '../../utils/errors'
+import { isValidEmail, isStrongPassword, PASSWORD_RULE_MESSAGE } from '../../utils/validation'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import './Perfil.css'
+
+const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
 
 /**
  * Componente que exibe o perfil do usuário logado, seus eventos confirmados e logout.
  */
 export default function Perfil() {
-  const { user, setUser, eventos, atualizarAvatar, showMessage } = useAppContext()
+  const { user, setUser, eventos, atualizarAvatar, showMessage, handleLogout } = useAppContext()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
 
@@ -28,10 +33,6 @@ export default function Perfil() {
   const [isSaving, setIsSaving] = useState(false)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-
-  useEffect(() => {
-    // Apenas limpa formulários ao fechar
-  }, [user])
 
   const eventosConfirmados = eventos.filter(evento =>
     user?.eventosConfirmados?.some(id => String(id) === String(evento.id))
@@ -52,68 +53,57 @@ export default function Perfil() {
     navigate(`/detalhes/${evento.id}`)
   }
 
-  const handleLogout = async () => {
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite escolher o mesmo arquivo de novo
+    if (!file) return
+    setIsSaving(true)
     try {
-      await supabase.auth.signOut()
-    } catch (error) {
-      console.error('Erro ao fazer logout', error)
+      // Confere o tipo real do arquivo e redesenha em 256x256 JPEG (descarta EXIF e conteúdo escondido).
+      await atualizarAvatar(await resizeImageToDataUrl(file))
+    } catch (err) {
+      showMessage(err.message || 'Não foi possível usar esta imagem.')
     } finally {
-      localStorage.removeItem('churchUser')
-      window.location.reload()
-    }
-  }
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('A imagem de perfil deve ter no máximo 2MB.')
-        return
-      }
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        atualizarAvatar(reader.result)
-      }
-      reader.readAsDataURL(file)
+      setIsSaving(false)
     }
   }
 
   const handleEditSubmit = async (e) => {
     e.preventDefault()
+    const novoEmail = editForm.novoEmail.trim()
 
-    if (editForm.emailAtual !== user.email) {
+    if (!sameEmail(editForm.emailAtual, user.email)) {
       showMessage('O e-mail atual digitado está incorreto.')
       return
     }
-
-    if (editForm.novoEmail !== editForm.repetirNovoEmail) {
+    if (!isValidEmail(novoEmail)) {
+      showMessage('Informe um e-mail válido, como nome@exemplo.com.')
+      return
+    }
+    if (!sameEmail(novoEmail, editForm.repetirNovoEmail)) {
       showMessage('O novo e-mail e a confirmação não coincidem.')
+      return
+    }
+    if (sameEmail(novoEmail, user.email)) {
+      showMessage('O novo e-mail precisa ser diferente do atual.')
       return
     }
 
     setIsSaving(true)
-
     try {
-      const dataToUpdate = {
-        email: editForm.novoEmail
+      // O e-mail de login vive no Supabase Auth. Com a confirmação de e-mail ligada, a troca só vale
+      // depois que o usuário clicar no link — até lá o e-mail antigo continua valendo.
+      const { pending } = await authService.updateAuthEmail(novoEmail)
+      if (pending) {
+        showMessage(`Enviamos um link de confirmação para ${novoEmail}. A troca vale depois que você confirmar.`, 'success')
+      } else {
+        setUser((prev) => (prev ? { ...prev, email: novoEmail } : prev))
+        showMessage('E-mail atualizado com sucesso!', 'success')
       }
-
-      await authService.updateUser(user.id, dataToUpdate)
-      try {
-        await authService.updateAuthEmail(editForm.novoEmail)
-      } catch (err) {
-        console.warn('Erro ao atualizar auth email no Supabase (limite de SMTP):', err)
-      }
-
-      const updatedUser = { ...user, email: editForm.novoEmail }
-      setUser(updatedUser)
-      localStorage.setItem('churchUser', JSON.stringify(updatedUser))
-
-      showMessage('E-mail atualizado com sucesso!', 'success')
       setIsEditing(false)
       setEditForm({ emailAtual: '', novoEmail: '', repetirNovoEmail: '' })
-    } catch {
-      showMessage('Erro ao atualizar e-mail.')
+    } catch (err) {
+      showMessage(friendlyError(err, 'Não foi possível atualizar o e-mail.'))
     } finally {
       setIsSaving(false)
     }
@@ -122,6 +112,10 @@ export default function Perfil() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
 
+    if (!isStrongPassword(passwordForm.novaSenha)) {
+      showMessage(PASSWORD_RULE_MESSAGE)
+      return
+    }
     if (passwordForm.novaSenha !== passwordForm.repetirSenha) {
       showMessage('A nova senha e a confirmação não coincidem.')
       return
@@ -129,7 +123,13 @@ export default function Perfil() {
 
     setIsSavingPassword(true)
     try {
-      await authService.login(user.email, passwordForm.senhaAtual)
+      try {
+        await authService.verifyPassword(user.email, passwordForm.senhaAtual)
+      } catch (err) {
+        const wrongPassword = /invalid login credentials/i.test(err?.message || '')
+        showMessage(wrongPassword ? 'A senha atual digitada está incorreta.' : friendlyError(err))
+        return
+      }
 
       await authService.updateAuthPassword(passwordForm.novaSenha)
 
@@ -137,11 +137,7 @@ export default function Perfil() {
       setPasswordForm({ senhaAtual: '', novaSenha: '', repetirSenha: '' })
       setIsChangingPassword(false)
     } catch (err) {
-      if (err.message && err.message.includes('Invalid login credentials')) {
-        showMessage('A senha atual digitada está incorreta.')
-      } else {
-        showMessage(err.message || 'Erro ao conectar com o servidor para alterar a senha.')
-      }
+      showMessage(friendlyError(err, 'Não foi possível alterar a senha.'))
     } finally {
       setIsSavingPassword(false)
     }
@@ -184,7 +180,7 @@ export default function Perfil() {
               type="file"
               ref={fileInputRef}
               onChange={handleAvatarChange}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/gif,image/webp"
               style={{ display: 'none' }}
             />
           </div>

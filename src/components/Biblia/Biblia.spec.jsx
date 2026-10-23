@@ -45,11 +45,10 @@ describe('Componente Biblia', () => {
   })
 
   it('deve buscar e renderizar os versículos de um capítulo via API', async () => {
-    const mockVersesResponse = {
-      verses: [
-        { verse: 1, text: 'No princípio, criou Deus os céus e a terra.' }
-      ]
-    }
+    // A bolls.life devolve um array de versículos
+    const mockVersesResponse = [
+      { verse: 1, text: 'No princípio, criou Deus os céus e a terra.' }
+    ]
 
     // Mock do fetch global
     const fetchMock = vi.fn().mockResolvedValue({
@@ -73,5 +72,32 @@ describe('Componente Biblia', () => {
       expect(screen.getByText('No princípio, criou Deus os céus e a terra.')).toBeInTheDocument()
       expect(screen.getByText('1')).toBeInTheDocument() // Número do versículo
     })
+  })
+
+  it('não injeta HTML vindo da API (XSS)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ verse: 1, text: 'Texto<img src=x onerror="window.__xss=1"><S>123</S>' }]
+    }))
+
+    const { container } = render(<Biblia />)
+    fireEvent.click(screen.getByText('Antigo Testamento'))
+    fireEvent.click(screen.getByText('Gênesis'))
+    fireEvent.click(screen.getByRole('button', { name: '1' }))
+
+    await waitFor(() => expect(screen.getByText('Texto')).toBeInTheDocument())
+    expect(container.querySelector('.versiculos-list img')).toBeNull()
+  })
+
+  it('mostra erro amigável quando a API falha', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    render(<Biblia />)
+    fireEvent.click(screen.getByText('Antigo Testamento'))
+    fireEvent.click(screen.getByText('Gênesis'))
+    fireEvent.click(screen.getByRole('button', { name: '1' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível carregar/i)
   })
 })

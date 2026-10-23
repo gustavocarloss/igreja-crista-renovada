@@ -157,6 +157,7 @@
 
 .v-text {
   font-weight: 400;
+  white-space: pre-line;
 }
 
 .leitura-capitulo-nav {

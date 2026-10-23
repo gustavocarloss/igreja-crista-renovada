@@ -1,78 +1,112 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import EventoDetalhes from './EventoDetalhes'
 
-const mockConfirmarPresenca = vi.fn()
-const mockCancelarPresenca = vi.fn()
-const mockSetCurrentPage = vi.fn()
+const mockNavigate = vi.fn()
+const mockConfirmarPresenca = vi.fn().mockResolvedValue(true)
+const mockCancelarPresenca = vi.fn().mockResolvedValue(true)
+const mockFetchAttendees = vi.fn()
 
-const mockSelectedEvent = {
+const inHours = (h) => new Date(Date.now() + h * 60 * 60 * 1000).toISOString()
+
+const mockEvento = {
   id: 10,
   nome: 'Culto de Domingo',
   local: 'Templo Central',
   horario: '30/08/2026 às 10:00',
+  raw_date: inHours(24),
   pastor: 'Pastor André',
   descricao: 'Celebração de Domingo',
   link: 'https://youtube.com/transmissao',
   aoVivo: true
 }
 
-const mockPresencas = [
-  { meeting_id: 10, user_name: 'Membro 1' },
-  { meeting_id: 10, user_name: 'Membro 2' }
-]
+let mockUser
 
-// Mocking Context
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  useParams: () => ({ id: '10' })
+}))
+
 vi.mock('../../context/AppContext', () => ({
   useAppContext: () => ({
-    selectedEvent: mockSelectedEvent,
-    user: { id: 1, nome: 'João', eventosConfirmados: [10] }, // Já confirmado
+    eventos: [mockEvento],
+    eventosLoaded: true,
+    eventosError: null,
+    reloadEvents: vi.fn(),
+    user: mockUser,
     confirmarPresenca: mockConfirmarPresenca,
     cancelarPresenca: mockCancelarPresenca,
-    presencas: mockPresencas,
-    setCurrentPage: mockSetCurrentPage
+    excluirEvento: vi.fn()
   })
 }))
 
-// Mocking MapPreview to isolate tests
-vi.mock('../common/MapPreview/MapPreview', () => ({
-  default: () => <div data-testid="mock-map">Mock Map</div>
+vi.mock('../../services/api', () => ({
+  attendanceService: { fetchMeetingAttendees: (...args) => mockFetchAttendees(...args) }
 }))
 
+vi.mock('../common/MapPreview/MapPreview', () => ({ default: () => <div data-testid="mock-map" /> }))
+vi.mock('../ChatBoard/ChatBoard', () => ({ default: () => <div data-testid="mock-chat" /> }))
+
 describe('Componente EventoDetalhes', () => {
-  it('deve renderizar todos os detalhes do evento selecionado', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUser = { id: 1, nome: 'João', role: 'user', eventosConfirmados: [] }
+    mockFetchAttendees.mockResolvedValue([
+      { id: 1, user_name: 'Membro 1', avatar_url: null },
+      { id: 2, user_name: 'Membro 2', avatar_url: null }
+    ])
+  })
+
+  it('renderiza os detalhes, o mapa e o chat', async () => {
     render(<EventoDetalhes />)
 
-    expect(screen.getByRole('heading', { name: /detalhes do evento/i })).toBeInTheDocument()
     expect(screen.getByText('Culto de Domingo')).toBeInTheDocument()
     expect(screen.getByText('Pastor André')).toBeInTheDocument()
     expect(screen.getByText('Templo Central')).toBeInTheDocument()
     expect(screen.getByText('Celebração de Domingo')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /acessar transmissão online/i })).toHaveAttribute('href', 'https://youtube.com/transmissao')
+    expect(screen.getByRole('link', { name: /acessar transmissão online/i })).toHaveAttribute(
+      'href',
+      'https://youtube.com/transmissao'
+    )
+    expect(screen.getByTestId('mock-map')).toBeInTheDocument()
+    expect(screen.getByTestId('mock-chat')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText(/presenças confirmadas \(2\)/i)).toBeInTheDocument())
+  })
 
-    // Deve conter as presenças
+  it('mostra a lista de confirmados', async () => {
+    render(<EventoDetalhes />)
+    fireEvent.click(await screen.findByRole('button', { name: /ver lista de confirmados/i }))
     expect(screen.getByText('Membro 1')).toBeInTheDocument()
     expect(screen.getByText('Membro 2')).toBeInTheDocument()
-
-    // Map preview deve renderizar
-    expect(screen.getByTestId('mock-map')).toBeInTheDocument()
   })
 
-  it('deve chamar setCurrentPage para voltar para home', () => {
+  it('confirma presença', async () => {
     render(<EventoDetalhes />)
-
-    const backButton = screen.getByRole('button', { name: /voltar/i })
-    fireEvent.click(backButton)
-
-    expect(mockSetCurrentPage).toHaveBeenCalledWith('home')
+    fireEvent.click(screen.getByRole('button', { name: /confirmar presença/i }))
+    await waitFor(() => expect(mockConfirmarPresenca).toHaveBeenCalledWith(10))
   })
 
-  it('deve permitir cancelar a presença quando já confirmado', () => {
+  it('cancela presença quando já confirmado', async () => {
+    mockUser = { ...mockUser, eventosConfirmados: [10] }
     render(<EventoDetalhes />)
+    fireEvent.click(screen.getByRole('button', { name: /cancelar presença/i }))
+    await waitFor(() => expect(mockCancelarPresenca).toHaveBeenCalledWith(10))
+  })
 
-    const button = screen.getByRole('button', { name: /presença confirmada/i })
-    fireEvent.click(button)
+  it('menu de administração só aparece para admin', () => {
+    const { unmount } = render(<EventoDetalhes />)
+    expect(screen.queryByRole('button', { name: /mais opções/i })).not.toBeInTheDocument()
+    unmount()
 
-    expect(mockCancelarPresenca).toHaveBeenCalledWith(mockSelectedEvent.id)
+    mockUser = { ...mockUser, role: 'admin' }
+    render(<EventoDetalhes />)
+    expect(screen.getByRole('button', { name: /mais opções/i })).toBeInTheDocument()
+  })
+
+  it('volta para a home quando não há histórico', () => {
+    render(<EventoDetalhes />)
+    fireEvent.click(screen.getByRole('button', { name: /voltar/i }))
+    expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 })

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, authService, eventService, attendanceService } from '../services/api'
 import { mapEventRow, eventToRow } from '../utils/events'
 import { friendlyError, isConnectivityProblem } from '../utils/errors'
+import { safeAvatar } from '../utils/image'
 
 const AppContext = createContext()
 
@@ -118,9 +119,9 @@ export function AppProvider({ children }) {
       id: profile.id,
       nome: profile.name,
       // O e-mail do Auth é a fonte da verdade (é o que vale para entrar no app).
-      email: authUser.email || profile.email,
+      email: authUser.email || '',
       role: profile.role || 'user',
-      avatar_url: profile.avatar_url || null,
+      avatar_url: safeAvatar(profile.avatar_url),
       eventosConfirmados: confirmedIds
     }
     loadedAuthIdRef.current = authUser.id

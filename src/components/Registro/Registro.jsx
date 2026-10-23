@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import PasswordField from '../common/PasswordField/PasswordField'
 import { getRandomVerse } from '../../utils/verses'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
+import { isValidEmail, isStrongPassword, MIN_PASSWORD_LENGTH, PASSWORD_RULE_MESSAGE } from '../../utils/validation'
 import './Registro.css'
 
 /**
@@ -11,14 +12,12 @@ import './Registro.css'
  * @param {Function} props.onRegister - Função disparada ao submeter o formulário de cadastro com nome, email e senha.
  * @param {Function} props.onShowLogin - Função para redirecionar o usuário para a tela de login.
  */
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const MIN_PASSWORD_LENGTH = 8
-
 export default function Registro({ onRegister, onShowLogin }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    senha: ''
+    senha: '',
+    confirmarSenha: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [verse, setVerse] = useState('')
@@ -38,12 +37,16 @@ export default function Registro({ onRegister, onShowLogin }) {
       setFormError('Informe seu nome completo.')
       return
     }
-    if (!EMAIL_REGEX.test(email)) {
+    if (!isValidEmail(email)) {
       setFormError('Informe um e-mail válido, como nome@exemplo.com.')
       return
     }
-    if (senha.length < MIN_PASSWORD_LENGTH || !/[A-Za-z]/.test(senha) || !/\d/.test(senha)) {
-      setFormError(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres, com letras e números.`)
+    if (!isStrongPassword(senha)) {
+      setFormError(PASSWORD_RULE_MESSAGE)
+      return
+    }
+    if (senha !== formData.confirmarSenha) {
+      setFormError('As senhas não são iguais. Digite a mesma senha nos dois campos.')
       return
     }
 
@@ -100,9 +103,19 @@ export default function Registro({ onRegister, onShowLogin }) {
           <PasswordField
             id="register-senha"
             autoComplete="new-password"
-            placeholder="Senha (mín. 6 caracteres)"
+            placeholder={`Senha (mín. ${MIN_PASSWORD_LENGTH} caracteres)`}
             value={formData.senha}
             onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+            required
+            disabled={isSubmitting}
+          />
+          <PasswordField
+            id="register-confirmar-senha"
+            label="Confirmar senha"
+            autoComplete="new-password"
+            placeholder="Confirmar senha"
+            value={formData.confirmarSenha}
+            onChange={(e) => setFormData({ ...formData, confirmarSenha: e.target.value })}
             required
             disabled={isSubmitting}
           />

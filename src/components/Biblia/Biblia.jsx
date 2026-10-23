@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { LIVROS_BIBLIA } from './constants'
+import { verseToPlainText } from '../../utils/sanitize'
 import './Biblia.css'
 
 /**
@@ -13,30 +14,31 @@ export default function Biblia() {
   const [loading, setLoading] = useState(false)
   const [busca, setBusca] = useState('')
   const [pastaAberta, setPastaAberta] = useState(null)
+  const [erro, setErro] = useState('')
 
   const handleLivroClick = (livro) => {
     setLivroSelecionado(livro)
     setCapituloSelecionado(null)
     setVersiculos([])
+    setErro('')
   }
 
   const handleCapituloClick = async (capitulo) => {
     setLoading(true)
+    setErro('')
     try {
-      const bookId = livros.findIndex(l => l.id === livroSelecionado.id) + 1;
+      const bookId = livros.findIndex(l => l.id === livroSelecionado.id) + 1
 
       // Usando a API Bolls Life com a tradução NVT
       const res = await fetch(`https://bolls.life/get-chapter/NVT/${bookId}/${capitulo}/`)
-      if (res.ok) {
-        const data = await res.json()
-        setVersiculos(data)
-        setCapituloSelecionado(capitulo)
-      } else {
-        alert('Erro ao carregar versículos. Tente novamente mais tarde.')
-      }
+      const data = res.ok ? await res.json() : null
+      if (!Array.isArray(data)) throw new Error(`Resposta inesperada da API (status ${res.status})`)
+      // O texto vem de um serviço de terceiros: vira texto puro, nunca é injetado como HTML.
+      setVersiculos(data.map(v => ({ verse: v.verse, text: verseToPlainText(v.text) })))
+      setCapituloSelecionado(capitulo)
     } catch (error) {
       console.error('Erro ao buscar versículos:', error)
-      alert('Erro de conexão ao buscar Bíblia.')
+      setErro('Não foi possível carregar este capítulo. Verifique sua internet e tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -91,6 +93,7 @@ export default function Biblia() {
         </header>
 
         <div className="leitura-container">
+          {erro && <p className="instrucao" role="alert">{erro}</p>}
           {loading ? (
             <div className="loading-state">Carregando leitura...</div>
           ) : (
@@ -98,7 +101,7 @@ export default function Biblia() {
               {versiculos.map(v => (
                 <div key={v.verse} className="versiculo-item">
                   <sup className="v-num">{v.verse}</sup>
-                  <span className="v-text" dangerouslySetInnerHTML={{ __html: v.text }}></span>
+                  <span className="v-text">{v.text}</span>
                 </div>
               ))}
 
@@ -145,6 +148,7 @@ export default function Biblia() {
         </header>
 
         <div className="capitulos-secao">
+          {erro && <p className="instrucao" role="alert">{erro}</p>}
           <p className="instrucao">Selecione o capítulo:</p>
           <div className="capitulos-grid">
             {caps.map(cap => (

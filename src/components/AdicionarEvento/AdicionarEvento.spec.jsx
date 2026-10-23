@@ -1,86 +1,84 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import AdicionarEvento from './AdicionarEvento'
 
+const mockNavigate = vi.fn()
 const mockAdicionarEvento = vi.fn()
 const mockAtualizarEvento = vi.fn()
-const mockSetCurrentPage = vi.fn()
-const mockSetEditingEvent = vi.fn()
 const mockShowMessage = vi.fn()
 
-let mockEditingEvent = null
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  useParams: () => ({})
+}))
 
 vi.mock('../../context/AppContext', () => ({
   useAppContext: () => ({
+    eventos: [],
+    eventosLoaded: true,
+    eventosError: null,
+    reloadEvents: vi.fn(),
     adicionarEvento: mockAdicionarEvento,
     atualizarEvento: mockAtualizarEvento,
-    setCurrentPage: mockSetCurrentPage,
-    editingEvent: mockEditingEvent,
-    setEditingEvent: mockSetEditingEvent,
-    showMessage: mockShowMessage
+    showMessage: mockShowMessage,
+    confirmAsync: vi.fn().mockResolvedValue(true)
   })
 }))
 
-// Mock MapPreview
-vi.mock('../common/MapPreview/MapPreview', () => ({
-  default: () => <div data-testid="mock-map">Mock Map</div>
-}))
+vi.mock('../common/MapPreview/MapPreview', () => ({ default: () => <div data-testid="mock-map" /> }))
+
+const tomorrow = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const fillForm = ({ nome = 'Culto de Jovens', local = 'Auditório Principal', data = tomorrow(), hora = '18:00', link } = {}) => {
+  fireEvent.change(screen.getByPlaceholderText(/nome do evento/i), { target: { value: nome } })
+  fireEvent.change(screen.getByLabelText(/local do evento/i), { target: { value: local } })
+  fireEvent.change(screen.getByLabelText(/data do evento/i), { target: { value: data } })
+  fireEvent.change(screen.getByLabelText(/horário/i), { target: { value: hora } })
+  if (link !== undefined) fireEvent.change(screen.getByLabelText(/link de transmissão/i), { target: { value: link } })
+}
 
 describe('Componente AdicionarEvento', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockEditingEvent = null
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [] }) }))
   })
 
-  it('deve renderizar campos de formulário vazios por padrão', () => {
+  it('renderiza o formulário vazio', () => {
     render(<AdicionarEvento />)
-
     expect(screen.getByRole('heading', { name: /adicionar evento/i })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/nome do evento/i)).toHaveValue('')
-    expect(screen.getByPlaceholderText(/pastor responsável/i)).toHaveValue('')
     expect(screen.getByRole('button', { name: /^adicionar evento$/i })).toBeInTheDocument()
   })
 
-  it('deve bloquear a submissão se a data/hora for no passado', () => {
+  it('bloqueia data/hora no passado', () => {
     render(<AdicionarEvento />)
-
-    const inputNome = screen.getByPlaceholderText(/nome do evento/i)
-    const inputLocal = screen.getByLabelText(/local do evento/i)
-    const inputData = screen.getByLabelText(/data do evento/i)
-    const inputHora = screen.getByLabelText(/horário/i)
-
-    fireEvent.change(inputNome, { target: { value: 'Culto Passado' } })
-    fireEvent.change(inputLocal, { target: { value: 'Rua das Flores, 100' } })
-    fireEvent.change(inputData, { target: { value: '2020-01-01' } }) // Passado
-    fireEvent.change(inputHora, { target: { value: '10:00' } })
-
+    fillForm({ data: '2020-01-01' })
     fireEvent.submit(screen.getByRole('form'))
-
     expect(mockShowMessage).toHaveBeenCalledWith('A data e hora do evento devem ser futuras!')
     expect(mockAdicionarEvento).not.toHaveBeenCalled()
   })
 
-  it('deve submeter e chamar adicionarEvento com data/hora futura', () => {
+  it('bloqueia link de transmissão que não seja http(s)', () => {
     render(<AdicionarEvento />)
+    fillForm({ link: 'javascript:alert(1)' })
+    fireEvent.submit(screen.getByRole('form'))
+    expect(mockShowMessage).toHaveBeenCalledWith(expect.stringMatching(/https:\/\//))
+    expect(mockAdicionarEvento).not.toHaveBeenCalled()
+  })
 
-    const inputNome = screen.getByPlaceholderText(/nome do evento/i)
-    const inputLocal = screen.getByLabelText(/local do evento/i)
-    const inputData = screen.getByLabelText(/data do evento/i)
-    const inputHora = screen.getByLabelText(/horário/i)
-
-    // Configurando data futura
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const tomorrowStr = tomorrow.toISOString().split('T')[0]
-
-    fireEvent.change(inputNome, { target: { value: 'Culto de Jovens' } })
-    fireEvent.change(inputLocal, { target: { value: 'Auditório Principal' } })
-    fireEvent.change(inputData, { target: { value: tomorrowStr } })
-    fireEvent.change(inputHora, { target: { value: '18:00' } })
-
-    fireEvent.click(screen.getByRole('button', { name: /^adicionar evento$/i }))
-
-    expect(mockAdicionarEvento).toHaveBeenCalled()
-    expect(mockSetCurrentPage).toHaveBeenCalledWith('home')
+  it('salva e volta para a home', async () => {
+    mockAdicionarEvento.mockResolvedValue(true)
+    render(<AdicionarEvento />)
+    fillForm({ link: 'https://youtube.com/live/x' })
+    fireEvent.submit(screen.getByRole('form'))
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'))
+    expect(mockAdicionarEvento).toHaveBeenCalledWith(
+      expect.objectContaining({ nome: 'Culto de Jovens', local: 'Auditório Principal', hora: '18:00' })
+    )
   })
 })

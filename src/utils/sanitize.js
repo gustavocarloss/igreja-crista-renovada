@@ -29,3 +29,20 @@ export function verseToPlainText(html) {
 
   return text.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim()
 }
+
+/**
+ * Aceita só links http(s) absolutos. Bloqueia `javascript:`, `data:` e afins, que em um `href`
+ * executariam código ao serem clicados.
+ *
+ * @param {unknown} value
+ * @returns {string|null} a URL normalizada, ou null se não for segura
+ */
+export function safeHttpUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null
+  try {
+    const url = new URL(value.trim())
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
+  } catch {
+    return null
+  }
+}

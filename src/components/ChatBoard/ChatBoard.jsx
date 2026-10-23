@@ -22,7 +22,7 @@ const mergeMessages = (current, incoming) => {
  * e carrega as fotos de perfil uma única vez por usuário.
  */
 export default function ChatBoard({ meetingId, isPastEvent }) {
-  const { user, showMessage } = useAppContext()
+  const { user, showMessage, confirmAsync } = useAppContext()
   const [messages, setMessages] = useState([])
   const [avatars, setAvatars] = useState({})
   const [inputText, setInputText] = useState('')
@@ -42,7 +42,7 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
     const missing = [
       ...new Set(
         batch
-          .filter((m) => !m.user_avatar && !requestedAvatarsRef.current.has(m.user_id))
+          .filter((m) => !requestedAvatarsRef.current.has(m.user_id))
           .map((m) => m.user_id)
       )
     ]
@@ -152,6 +152,19 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
     }
   }
 
+  const handleDelete = async (msg) => {
+    const ok = await confirmAsync('Apagar esta mensagem para todos?', { confirmLabel: 'Apagar', cancelLabel: 'Cancelar' })
+    if (!ok) return
+    try {
+      await chatService.deleteMessage(msg.id)
+      setMessages((prev) => prev.filter((m) => m.id !== msg.id))
+    } catch (err) {
+      showMessage(friendlyError(err, 'Não foi possível apagar a mensagem.'))
+    }
+  }
+
+  const isAdmin = user?.role === 'admin'
+
   return (
     <div className="chat-board">
       <div className="chat-header">
@@ -170,7 +183,7 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
           messages.map(msg => {
             const isMine = msg.user_id === user?.id
             const name = msg.user_name || 'Membro'
-            const avatar = msg.user_avatar || avatars[msg.user_id]
+            const avatar = avatars[msg.user_id]
             return (
               <div key={msg.id} className={`chat-message ${isMine ? 'mine' : 'others'}`}>
                 {!isMine && (
@@ -201,6 +214,11 @@ export default function ChatBoard({ meetingId, isPastEvent }) {
                       hour: '2-digit',
                       minute: '2-digit'
                     }).replace(',', ' às')}
+                    {(isMine || isAdmin) && (
+                      <button type="button" className="chat-delete-btn" onClick={() => handleDelete(msg)}>
+                        Apagar
+                      </button>
+                    )}
                   </span>
                 </div>
               </div>

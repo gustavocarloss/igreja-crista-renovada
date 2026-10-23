@@ -1,7 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_KEY, CONFIG_ERROR } from '../config'
+import { safeAvatar } from '../utils/image'
 
 const REQUEST_TIMEOUT_MS = 15000
+
+/** Colunas do perfil lidas pelo app. O e-mail vem sempre do Auth (fonte da verdade), não da tabela. */
+const PROFILE_COLUMNS = 'id, name, role, avatar_url'
+const MESSAGE_COLUMNS = 'id, meeting_id, user_id, user_name, text, image_url, created_at'
+
+/** Campos do perfil que o próprio usuário pode alterar. `role`, `email` e ids nunca saem do cliente. */
+const EDITABLE_PROFILE_FIELDS = ['name', 'avatar_url']
 
 /**
  * fetch com tempo limite. Sem isso, um banco fora do ar (ou pausado) deixa o app
@@ -66,20 +74,23 @@ export const authService = {
    */
   async getProfile(authUser) {
     const existing = unwrap(
-      await supabase.from('user').select('*').eq('auth_user_id', authUser.id).maybeSingle()
+      await supabase.from('user').select(PROFILE_COLUMNS).eq('auth_user_id', authUser.id).maybeSingle()
     )
     if (existing) return existing
 
     const fallbackName =
       authUser.user_metadata?.name || (authUser.email ? authUser.email.split('@')[0] : 'Membro')
-    const created = unwrap(
+    return this.createProfile(authUser, fallbackName)
+  },
+
+  async createProfile(authUser, name) {
+    return unwrap(
       await supabase
         .from('user')
-        .insert([{ name: fallbackName, email: authUser.email, auth_user_id: authUser.id }])
-        .select()
+        .insert([{ name: String(name).trim().slice(0, 80), email: authUser.email, auth_user_id: authUser.id }])
+        .select(PROFILE_COLUMNS)
         .single()
     )
-    return created
   },
 
   async login(email, password) {
@@ -116,18 +127,17 @@ export const authService = {
     // Sem sessão = confirmação de e-mail obrigatória; o perfil é criado no primeiro login.
     if (!data.session) return { session: null, profile: null }
 
-    const profile = unwrap(
-      await supabase
-        .from('user')
-        .insert([{ name, email, auth_user_id: data.user.id }])
-        .select()
-        .single()
-    )
+    const profile = await this.createProfile(data.user, name)
     return { session: data.session, profile }
   },
 
+  /** Atualiza o perfil do usuário. Só os campos de EDITABLE_PROFILE_FIELDS são enviados. */
   async updateUser(id, userData) {
-    const rows = unwrap(await supabase.from('user').update(userData).eq('id', id).select())
+    const changes = Object.fromEntries(
+      Object.entries(userData).filter(([key]) => EDITABLE_PROFILE_FIELDS.includes(key))
+    )
+    if (!Object.keys(changes).length) throw new ApiError('Nada para atualizar.')
+    const rows = unwrap(await supabase.from('user').update(changes).eq('id', id).select(PROFILE_COLUMNS))
     if (!rows.length) throw new ApiError('permission denied', { code: '42501' })
     return rows
   },
@@ -180,7 +190,7 @@ export const eventService = {
  */
 export const attendanceService = {
   async fetchUserAttendances(userId) {
-    return unwrap(await supabase.from('attendance').select('*').eq('user_id', userId))
+    return unwrap(await supabase.from('attendance').select('meeting_id').eq('user_id', userId))
   },
 
   /**
@@ -202,7 +212,7 @@ export const attendanceService = {
         meeting_id: row.meeting_id,
         user_id: row.user_id,
         user_name: u?.name || 'Membro',
-        avatar_url: u?.avatar_url || null
+        avatar_url: safeAvatar(u?.avatar_url)
       }
     })
   },
@@ -243,7 +253,7 @@ export const chatService = {
       return unwrap(
         await supabase
           .from('messages')
-          .select('*')
+          .select(MESSAGE_COLUMNS)
           .eq('meeting_id', meetingId)
           .gt('created_at', after)
           .order('created_at', { ascending: true })
@@ -253,7 +263,7 @@ export const chatService = {
     const rows = unwrap(
       await supabase
         .from('messages')
-        .select('*')
+        .select(MESSAGE_COLUMNS)
         .eq('meeting_id', meetingId)
         .order('created_at', { ascending: false })
         .limit(limit)
@@ -262,14 +272,21 @@ export const chatService = {
   },
 
   async sendMessage(messageData) {
-    const data = unwrap(await supabase.from('messages').insert([messageData]).select())
+    const data = unwrap(await supabase.from('messages').insert([messageData]).select(MESSAGE_COLUMNS))
     return { ok: true, data }
+  },
+
+  /** Apaga uma mensagem. O banco só permite ao autor ou a um admin (ver supabase-security.sql). */
+  async deleteMessage(id) {
+    const rows = unwrap(await supabase.from('messages').delete().eq('id', id).select('id'))
+    if (!rows.length) throw new ApiError('permission denied', { code: '42501' })
+    return true
   },
 
   /** Avatares de vários usuários de uma vez (para não repetir a foto em cada mensagem). */
   async fetchAvatars(userIds) {
     if (!userIds.length) return {}
     const users = unwrap(await supabase.from('user').select('id, avatar_url').in('id', userIds))
-    return Object.fromEntries(users.map((u) => [u.id, u.avatar_url || null]))
+    return Object.fromEntries(users.map((u) => [u.id, safeAvatar(u.avatar_url)]))
   }
 }

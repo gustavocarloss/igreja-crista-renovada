@@ -1,61 +1,46 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import CalendarioView from './CalendarioView'
 
-const mockSetSelectedEvent = vi.fn()
-const mockSetCurrentPage = vi.fn()
+const mockNavigate = vi.fn()
 
-// Configurar eventos mock fixos baseados em agosto de 2026
+// Datas ao meio-dia local para não mudar de dia em nenhum fuso horário.
 const mockEventos = [
-  {
-    id: 1,
-    nome: 'Evento Um',
-    local: 'Templo',
-    raw_date: '2026-08-15T10:00:00.000Z' // 15 de Agosto
-  },
-  {
-    id: 2,
-    nome: 'Evento Dois',
-    local: 'Quadra',
-    raw_date: '2026-08-20T14:00:00.000Z' // 20 de Agosto
-  }
+  { id: 1, nome: 'Evento Um', local: 'Templo', raw_date: new Date(2026, 7, 15, 12).toISOString() },
+  { id: 2, nome: 'Evento Dois', local: 'Quadra', raw_date: new Date(2026, 7, 20, 12).toISOString() }
 ]
 
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }))
+
 vi.mock('../../context/AppContext', () => ({
-  useAppContext: () => ({
-    eventos: mockEventos,
-    setSelectedEvent: mockSetSelectedEvent,
-    setCurrentPage: mockSetCurrentPage
-  })
+  useAppContext: () => ({ eventos: mockEventos })
 }))
 
 describe('Componente CalendarioView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 7, 1, 9))
   })
 
-  it('deve renderizar o cabeçalho do calendário e listagem', () => {
-    render(<CalendarioView />)
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
+  it('renderiza o mês atual', () => {
+    render(<CalendarioView />)
     expect(screen.getByRole('heading', { name: /agenda mensal/i })).toBeInTheDocument()
-    expect(screen.getByText(/Próximos este mês/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /agosto 2026/i })).toBeInTheDocument()
   })
 
-  it('deve renderizar os indicadores nos dias que possuem eventos', () => {
+  it('marca os dias que têm eventos', () => {
     render(<CalendarioView />)
-
-    // Devem existir indicadores renderizados (no-mínimo 2 indicadores correspondentes aos mockEventos)
-    const indicators = screen.getAllByTestId('indicator')
-    expect(indicators.length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByTestId('indicator')).toHaveLength(2)
   })
 
-  it('deve navegar para a página de detalhes ao clicar em um mini-card de evento', () => {
+  it('abre os detalhes ao tocar em um evento da lista', () => {
     render(<CalendarioView />)
-
-    const eventCard = screen.getByText('Evento Um')
-    fireEvent.click(eventCard.closest('.agenda-mini-card'))
-
-    expect(mockSetSelectedEvent).toHaveBeenCalledWith(mockEventos[0])
-    expect(mockSetCurrentPage).toHaveBeenCalledWith('detalhes')
+    fireEvent.click(screen.getByText('Evento Um').closest('.agenda-mini-card'))
+    expect(mockNavigate).toHaveBeenCalledWith('/detalhes/1')
   })
 })

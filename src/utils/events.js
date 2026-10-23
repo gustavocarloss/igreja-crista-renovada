@@ -1,4 +1,5 @@
 import { extractLocalDateAndTime } from './date'
+import { safeHttpUrl } from './sanitize'
 
 /** Um evento é considerado "em andamento" por 2h depois do horário de início; depois disso sai da home. */
 export const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000
@@ -7,7 +8,7 @@ export const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000
  * Regra ÚNICA de status de evento, usada em todas as telas.
  *
  * - `upcoming`: ainda não começou (ou sem data definida)
- * - `live`: começou há menos de 4h
+ * - `live`: começou há menos de 2h (LIVE_WINDOW_MS)
  * - `past`: encerrado
  *
  * @param {string|Date|null|undefined} rawDate
@@ -40,16 +41,17 @@ const formatHorario = (rawDate) =>
 /** Linha da tabela `meeting` → objeto usado pela interface. */
 export function mapEventRow(row) {
   const { data, hora } = extractLocalDateAndTime(row.meeting_date)
+  const link = safeHttpUrl(row.meeting_link)
   return {
     id: row.id,
     nome: row.meeting_name,
-    link: row.meeting_link,
+    link,
     local: row.meeting_location,
     raw_date: row.meeting_date,
     horario: formatHorario(row.meeting_date),
     pastor: row.meeting_priest,
     descricao: row.meeting_description,
-    aoVivo: !!row.meeting_link,
+    aoVivo: !!link,
     data,
     hora
   }
@@ -60,7 +62,7 @@ export function eventToRow(evento) {
   const localDateTime = new Date(`${evento.data}T${evento.hora}:00`)
   return {
     meeting_name: evento.nome.trim(),
-    meeting_link: evento.link ? evento.link.trim() : null,
+    meeting_link: safeHttpUrl(evento.link),
     meeting_location: evento.local.trim(),
     meeting_date: localDateTime.toISOString(),
     meeting_priest: evento.pastor ? evento.pastor.trim() : null,

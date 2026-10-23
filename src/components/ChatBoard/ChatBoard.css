@@ -144,6 +144,17 @@
   margin-top: 4px;
 }
 
+.chat-delete-btn {
+  margin-left: 8px;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .chat-input-area {
   padding: 12px;
   background: white;

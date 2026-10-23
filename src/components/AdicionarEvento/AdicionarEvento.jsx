@@ -5,6 +5,7 @@ import MapPreview from '../common/MapPreview/MapPreview'
 import LocationInput from '../common/LocationInput/LocationInput'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import ErrorState from '../common/ErrorState/ErrorState'
+import { safeHttpUrl } from '../../utils/sanitize'
 import './AdicionarEvento.css'
 
 const EMPTY_EVENT = {
@@ -97,6 +98,10 @@ export default function AdicionarEvento() {
     const local = novoEvento.local.trim()
     if (!nome || !local || !novoEvento.data || !novoEvento.hora) {
       showMessage('Preencha o nome, o local, a data e o horário do evento.')
+      return
+    }
+    if (novoEvento.link.trim() && !safeHttpUrl(novoEvento.link)) {
+      showMessage('O link de transmissão precisa ser um endereço começando com https://')
       return
     }
 

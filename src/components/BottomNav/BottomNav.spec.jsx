@@ -1,44 +1,56 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import BottomNav from './BottomNav'
 
-// Setup dos mocks antes do componente
-const mockSetCurrentPage = vi.fn()
+const mockNavigate = vi.fn()
+let mockUser = { role: 'user' }
 
-vi.mock('../../context/AppContext', () => ({
-  useAppContext: () => ({
-    currentPage: 'home',
-    setCurrentPage: mockSetCurrentPage
-  })
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useNavigate: () => mockNavigate
 }))
 
+vi.mock('../../context/AppContext', () => ({
+  useAppContext: () => ({ user: mockUser })
+}))
+
+const renderAt = (path) =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <BottomNav />
+    </MemoryRouter>
+  )
+
 describe('Componente BottomNav', () => {
-  it('deve renderizar todos os botões de navegação', () => {
-    render(<BottomNav />)
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUser = { role: 'user' }
+  })
 
-    expect(screen.getByRole('button', { name: /início/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /agenda/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /bíblia/i })).toBeInTheDocument()
+  it('mostra os botões de membro e esconde "Adicionar"', () => {
+    renderAt('/')
+    for (const name of [/início/i, /agenda/i, /bíblia/i, /perfil/i]) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    }
+    expect(screen.queryByRole('button', { name: /adicionar/i })).not.toBeInTheDocument()
+  })
+
+  it('mostra "Adicionar" para administradores', () => {
+    mockUser = { role: 'admin' }
+    renderAt('/')
     expect(screen.getByRole('button', { name: /adicionar/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /perfil/i })).toBeInTheDocument()
   })
 
-  it('deve marcar o botão correto como ativo com base no estado do contexto', () => {
-    render(<BottomNav />)
-
-    const homeButton = screen.getByRole('button', { name: /início/i })
-    expect(homeButton).toHaveClass('active')
-
-    const agendaButton = screen.getByRole('button', { name: /agenda/i })
-    expect(agendaButton).not.toHaveClass('active')
+  it('marca a aba da rota atual como ativa', () => {
+    renderAt('/calendario')
+    expect(screen.getByRole('button', { name: /agenda/i })).toHaveClass('active')
+    expect(screen.getByRole('button', { name: /início/i })).not.toHaveClass('active')
   })
 
-  it('deve chamar a prop setCurrentPage com o id correto ao clicar em um botão', () => {
-    render(<BottomNav />)
-
-    const agendaButton = screen.getByRole('button', { name: /agenda/i })
-    fireEvent.click(agendaButton)
-
-    expect(mockSetCurrentPage).toHaveBeenCalledWith('calendario')
+  it('navega ao clicar', () => {
+    renderAt('/')
+    fireEvent.click(screen.getByRole('button', { name: /agenda/i }))
+    expect(mockNavigate).toHaveBeenCalledWith('/calendario')
   })
 })

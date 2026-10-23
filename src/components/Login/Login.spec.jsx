@@ -1,14 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import Login from './Login'
+import { bibleVerses } from '../../utils/verses'
 
 describe('Componente Login', () => {
   it('deve renderizar todos os elementos do formulário de login', () => {
     render(<Login onLogin={() => {}} onShowRegister={() => {}} />)
 
-    expect(screen.getByRole('heading', { name: /igreja cristã renovada/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /seja bem vindo/i })).toBeInTheDocument()
     expect(screen.getByAltText('ICR Logo')).toBeInTheDocument()
-    expect(screen.getByText(/"Tomando o pão, deu graças, partiu-o e o deu aos discípulos"/i)).toBeInTheDocument()
+    expect(bibleVerses).toContain(document.querySelector('.verse').textContent)
     expect(screen.getByLabelText(/^e-mail$/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^senha$/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument()
