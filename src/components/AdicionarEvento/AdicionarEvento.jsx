@@ -6,7 +6,14 @@ import LocationInput from '../common/LocationInput/LocationInput'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import ErrorState from '../common/ErrorState/ErrorState'
 import { safeHttpUrl } from '../../utils/sanitize'
+import { extractLocalDateAndTime } from '../../utils/date'
+import TopHeader from '../common/TopHeader/TopHeader'
+import useBackHandler, { armBackTrap } from '../../hooks/useBackHandler'
 import './AdicionarEvento.css'
+
+const pad = (n) => String(n).padStart(2, '0')
+const HOURS = Array.from({ length: 24 }, (_, i) => pad(i))
+const MINUTES = Array.from({ length: 60 }, (_, i) => pad(i))
 
 const EMPTY_EVENT = {
   nome: '',
@@ -53,42 +60,33 @@ export default function AdicionarEvento() {
 
   const isDirty = JSON.stringify(novoEvento) !== JSON.stringify(initialForm)
 
+  const confirmDiscard = () => confirmAsync('Deseja descartar as alterações?', { confirmLabel: 'Sim', cancelLabel: 'Não' })
+
   const handleVoltar = async () => {
-    if (isDirty) {
-      const descartar = await confirmAsync('Deseja descartar as alterações?', {
-        confirmLabel: 'Sim',
-        cancelLabel: 'Não'
-      })
-      if (!descartar) return
-    }
+    if (isDirty && !(await confirmDiscard())) return
     navigate('/')
   }
+
+  // "Voltar" do celular com alterações não salvas: pergunta antes de sair do formulário.
+  useBackHandler(isDirty, async () => {
+    if (!(await confirmDiscard())) return armBackTrap()
+    navigate(window.history.state?.idx > 0 ? -1 : '/', { replace: true })
+  })
+
+  const [hh = '', mm = ''] = novoEvento.hora.split(':')
+  const setHora = (h, m) => setNovoEvento({ ...novoEvento, hora: h ? `${h}:${m || '00'}` : '' })
 
   // Preenche o formulário uma única vez com os dados do evento em edição
   useEffect(() => {
     if (editingEvent && filledFor !== editingEvent.id) {
-      const filled = {
-        nome: editingEvent.nome || '',
-        link: editingEvent.link || '',
-        local: editingEvent.local || '',
-        data: editingEvent.data || '',
-        hora: editingEvent.hora || '',
-        descricao: editingEvent.descricao || '',
-        pastor: editingEvent.pastor || ''
-      }
+      const filled = Object.fromEntries(Object.keys(EMPTY_EVENT).map((key) => [key, editingEvent[key] || '']))
       setNovoEvento(filled)
       setInitialForm(filled)
       setFilledFor(editingEvent.id)
     }
   }, [editingEvent, filledFor])
 
-  const getTodayString = () => {
-    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
-    return localISOTime;
-  }
-
-  const minDate = getTodayString()
+  const minDate = extractLocalDateAndTime(new Date()).data
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -150,10 +148,7 @@ export default function AdicionarEvento() {
 
   return (
     <div className="page">
-      <div className="top-header-bar">
-        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-        <span className="header-title">Igreja Cristã Renovada</span>
-      </div>
+      <TopHeader />
       <header className="page-header">
         <button type="button" onClick={handleVoltar} className="back-btn" aria-label="Voltar">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -209,13 +204,18 @@ export default function AdicionarEvento() {
           </div>
           <div className="input-group">
             <label htmlFor="event-time">Horário</label>
-            <input
-              id="event-time"
-              type="time"
-              value={novoEvento.hora}
-              onChange={(e) => setNovoEvento({ ...novoEvento, hora: e.target.value })}
-              required
-            />
+            {/* Selects em vez de type="time": o relógio nativo do Android corta o botão "Definir" em alguns aparelhos. */}
+            <div className="time-selects">
+              <select id="event-time" value={hh} onChange={(e) => setHora(e.target.value, mm)} required>
+                <option value="">--</option>
+                {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
+              </select>
+              <span>:</span>
+              <select aria-label="Minutos" value={mm} onChange={(e) => setHora(hh, e.target.value)} disabled={!hh}>
+                {!hh && <option value="">--</option>}
+                {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 

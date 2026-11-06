@@ -8,13 +8,5 @@ export default function LoadingSpinner({ message = "Carregando...", fullScreen =
     </div>
   )
 
-  if (fullScreen) {
-    return (
-      <div className="loading-overlay">
-        {content}
-      </div>
-    )
-  }
-
-  return content
+  return fullScreen ? <div className="loading-overlay">{content}</div> : content
 }

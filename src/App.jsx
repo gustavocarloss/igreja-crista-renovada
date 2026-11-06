@@ -11,6 +11,8 @@ import LoadingSpinner from './components/common/LoadingSpinner/LoadingSpinner'
 import ErrorState from './components/common/ErrorState/ErrorState'
 import InstallBanner from './components/common/InstallBanner/InstallBanner'
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner'
+import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha'
+import useBackHandler, { armBackTrap, exitApp } from './hooks/useBackHandler'
 import './App.css'
 
 // Telas secundárias carregam sob demanda: o primeiro acesso (celular, 4G) baixa menos código.
@@ -21,6 +23,9 @@ const Perfil = lazy(() => import('./components/Perfil/Perfil'))
 const AdicionarEvento = lazy(() => import('./components/AdicionarEvento/AdicionarEvento'))
 
 const MIN_SPLASH_MS = 900
+
+/** Telas da barra de navegação: nelas o "voltar" do celular pergunta se quer sair do app. */
+const MAIN_PATHS = ['/', '/calendario', '/biblia', '/perfil', '/adicionar']
 
 /** Rota exclusiva de administradores (a proteção real dos dados é feita pelo RLS no Supabase). */
 function AdminRoute({ children }) {
@@ -34,8 +39,30 @@ function AdminRoute({ children }) {
 function App() {
   const [minSplashDone, setMinSplashDone] = useState(false)
   const location = useLocation()
-  const { user, authReady, authError, authPage, setAuthPage, handleLogin, handleRegister, modalConfig, closeModal } =
-    useAppContext()
+  const {
+    user,
+    authReady,
+    authError,
+    authPage,
+    setAuthPage,
+    handleLogin,
+    handleRegister,
+    handleForgotPassword,
+    passwordRecovery,
+    salvarNovaSenha,
+    modalConfig,
+    closeModal,
+    confirmAsync
+  } = useAppContext()
+
+  useBackHandler(!user || MAIN_PATHS.includes(location.pathname), async () => {
+    if (!user && authPage === 'register') {
+      setAuthPage('login')
+      return armBackTrap()
+    }
+    if (await confirmAsync('Deseja sair do aplicativo?', { confirmLabel: 'Sim', cancelLabel: 'Não' })) exitApp()
+    else armBackTrap()
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setMinSplashDone(true), MIN_SPLASH_MS)
@@ -57,11 +84,17 @@ function App() {
         onRetry={() => window.location.reload()}
       />
     )
+  } else if (user && passwordRecovery) {
+    content = <RedefinirSenha onSubmit={salvarNovaSenha} />
   } else if (!user) {
     content = (
       <>
         {authPage === 'login' ? (
-          <Login onLogin={handleLogin} onShowRegister={() => setAuthPage('register')} />
+          <Login
+            onLogin={handleLogin}
+            onShowRegister={() => setAuthPage('register')}
+            onForgotPassword={handleForgotPassword}
+          />
         ) : (
           <Registro onRegister={handleRegister} onShowLogin={() => setAuthPage('login')} />
         )}

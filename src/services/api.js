@@ -37,6 +37,9 @@ async function fetchWithTimeout(input, init = {}) {
   }
 }
 
+/** Lido antes do Supabase limpar a URL: o app foi aberto pelo link de "esqueci minha senha"? */
+export const OPENED_FROM_RECOVERY_LINK = typeof window !== 'undefined' && /type=recovery/.test(window.location.hash)
+
 // Somente a chave anon/publishable chega aqui (validada em src/config.js e no build).
 // Se a configuração estiver inválida usamos valores "mortos" só para não quebrar a importação;
 // o app mostra a tela de erro de configuração antes de qualquer chamada.
@@ -94,8 +97,7 @@ export const authService = {
   },
 
   async login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    const data = unwrap(await supabase.auth.signInWithPassword({ email, password }))
     if (!data?.user) throw new ApiError('Invalid login credentials')
 
     const profile = await this.getProfile(data.user)
@@ -104,18 +106,12 @@ export const authService = {
 
   /** Confere se a senha informada está correta sem alterar a sessão do app. */
   async verifyPassword(email, password) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    unwrap(await supabase.auth.signInWithPassword({ email, password }))
     return true
   },
 
   async register(name, email, password) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } }
-    })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    const data = unwrap(await supabase.auth.signUp({ email, password, options: { data: { name } } }))
     if (!data?.user) throw new ApiError('Não foi possível criar a conta.')
 
     // Quando o e-mail já existe e a confirmação por e-mail está ligada, o Supabase devolve
@@ -142,23 +138,29 @@ export const authService = {
     return rows
   },
 
+  /** Envia o e-mail com o link de redefinição; o link abre o app de volta (precisa estar nas Redirect URLs do Supabase). */
+  async sendPasswordReset(email) {
+    unwrap(
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + import.meta.env.BASE_URL
+      })
+    )
+  },
+
   async updateAuthPassword(newPassword) {
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    unwrap(await supabase.auth.updateUser({ password: newPassword }))
     return true
   },
 
   /** @returns {Promise<{ pending: boolean }>} pending=true quando falta confirmar no novo e-mail. */
   async updateAuthEmail(newEmail) {
-    const { data, error } = await supabase.auth.updateUser({ email: newEmail })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    const data = unwrap(await supabase.auth.updateUser({ email: newEmail }))
     return { pending: !!data?.user?.new_email }
   },
 
   /** Encerra a sessão neste aparelho (funciona mesmo sem internet). */
   async signOut() {
-    const { error } = await supabase.auth.signOut({ scope: 'local' })
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    unwrap(await supabase.auth.signOut({ scope: 'local' }))
   }
 }
 
@@ -223,19 +225,12 @@ export const attendanceService = {
       .insert([{ user_id: userId, meeting_id: meetingId }])
       .select()
     // 23505 = já confirmado (duplo clique, outra aba): tratamos como sucesso.
-    if (error && error.code !== '23505') {
-      throw new ApiError(error.message, { code: error.code, status: error.status })
-    }
+    if (error?.code !== '23505') unwrap({ data, error })
     return { ok: true, data }
   },
 
   async cancelPresence(userId, meetingId) {
-    const { data, error } = await supabase
-      .from('attendance')
-      .delete()
-      .eq('user_id', userId)
-      .eq('meeting_id', meetingId)
-    if (error) throw new ApiError(error.message, { code: error.code, status: error.status })
+    const data = unwrap(await supabase.from('attendance').delete().eq('user_id', userId).eq('meeting_id', meetingId))
     return { ok: true, data }
   }
 }

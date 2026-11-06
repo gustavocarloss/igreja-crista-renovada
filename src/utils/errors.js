@@ -5,7 +5,7 @@
 
 const NETWORK_RE = /failed to fetch|networkerror|network request failed|load failed|fetch failed|err_internet|err_network|tempo esgotado|timeout|timed out|aborterror|the operation was aborted/i
 
-export const MESSAGES = {
+const MESSAGES = {
   network: 'Sem conexão com o servidor. Verifique sua internet e tente novamente.',
   serverDown: 'Nosso servidor está indisponível no momento. Tente novamente em alguns minutos.',
   permission: 'Você não tem permissão para realizar esta ação.',
@@ -14,7 +14,7 @@ export const MESSAGES = {
 }
 
 /** Erro de conectividade (sem internet, DNS, timeout...). */
-export function isNetworkError(err) {
+function isNetworkError(err) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
   if (!err) return false
   const message = String(err.message || err)
@@ -28,7 +28,7 @@ export function isNetworkError(err) {
 }
 
 /** Banco/servidor fora do ar (5xx, projeto Supabase pausado...). */
-export function isServerDownError(err) {
+function isServerDownError(err) {
   if (!err) return false
   const status = Number(err.status)
   const message = String(err.message || '')

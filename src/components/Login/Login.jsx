@@ -11,7 +11,7 @@ import './Login.css'
  * @param {Function} props.onLogin - Função disparada ao submeter o formulário de login com email e senha.
  * @param {Function} props.onShowRegister - Função para redirecionar o usuário para a tela de registro de nova conta.
  */
-export default function Login({ onLogin, onShowRegister }) {
+export default function Login({ onLogin, onShowRegister, onForgotPassword }) {
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
@@ -86,6 +86,14 @@ export default function Login({ onLogin, onShowRegister }) {
               disabled={isSubmitting}
             />
             <label htmlFor="remember-me">Lembrar de mim</label>
+            <button
+              type="button"
+              className="forgot-password-btn"
+              onClick={() => onForgotPassword(formData.email)}
+              disabled={isSubmitting}
+            >
+              Esqueci minha senha
+            </button>
           </div>
           <button type="submit" className="login-btn" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}

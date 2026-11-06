@@ -2,7 +2,7 @@ import { extractLocalDateAndTime } from './date'
 import { safeHttpUrl } from './sanitize'
 
 /** Um evento é considerado "em andamento" por 2h depois do horário de início; depois disso sai da home. */
-export const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000
+const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000
 
 /**
  * Regra ÚNICA de status de evento, usada em todas as telas.

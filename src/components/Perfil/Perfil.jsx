@@ -7,9 +7,33 @@ import { resizeImageToDataUrl } from '../../utils/image'
 import { friendlyError } from '../../utils/errors'
 import { isValidEmail, isStrongPassword, PASSWORD_RULE_MESSAGE } from '../../utils/validation'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
+import TopHeader from '../common/TopHeader/TopHeader'
 import './Perfil.css'
 
 const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+
+const EMAIL_FIELDS = [
+  ['emailAtual', 'E-mail atual'],
+  ['novoEmail', 'Novo e-mail'],
+  ['repetirNovoEmail', 'Confirmar novo e-mail']
+]
+const PASSWORD_FIELDS = [
+  ['senhaAtual', 'Senha Atual'],
+  ['novaSenha', 'Nova Senha'],
+  ['repetirSenha', 'Repetir Nova Senha']
+]
+
+function EventoItem({ evento, onClick, title, style, dotStyle }) {
+  return (
+    <div className="confirmado-item clickable-item" onClick={onClick} title={title} style={style}>
+      <div className="confirmado-dot" style={dotStyle}></div>
+      <div className="confirmado-info">
+        <h4>{evento.nome}</h4>
+        <p>{evento.horario}</p>
+      </div>
+    </div>
+  )
+}
 
 /**
  * Componente que exibe o perfil do usuário logado, seus eventos confirmados e logout.
@@ -51,6 +75,11 @@ export default function Perfil() {
 
   const handleVerDetalhes = (evento) => {
     navigate(`/detalhes/${evento.id}`)
+  }
+
+  const openFromHistory = (evento) => {
+    setShowHistory(false)
+    handleVerDetalhes(evento)
   }
 
   const handleAvatarChange = async (e) => {
@@ -148,10 +177,7 @@ export default function Perfil() {
   return (
     <div className="page">
       {(isSaving || isSavingPassword) && <LoadingSpinner fullScreen={true} message="Atualizando seus dados..." />}
-      <div className="top-header-bar">
-        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-        <span className="header-title">Igreja Cristã Renovada</span>
-      </div>
+      <TopHeader />
       <header className="page-header">
         <h1>Meu Perfil</h1>
       </header>
@@ -188,27 +214,16 @@ export default function Perfil() {
           <div className="user-details">
             {isEditing ? (
               <form onSubmit={handleEditSubmit} className="edit-profile-form">
-                <input
-                  type="email"
-                  value={editForm.emailAtual}
-                  onChange={(e) => setEditForm({ ...editForm, emailAtual: e.target.value })}
-                  placeholder="E-mail atual"
-                  required
-                />
-                <input
-                  type="email"
-                  value={editForm.novoEmail}
-                  onChange={(e) => setEditForm({ ...editForm, novoEmail: e.target.value })}
-                  placeholder="Novo e-mail"
-                  required
-                />
-                <input
-                  type="email"
-                  value={editForm.repetirNovoEmail}
-                  onChange={(e) => setEditForm({ ...editForm, repetirNovoEmail: e.target.value })}
-                  placeholder="Confirmar novo e-mail"
-                  required
-                />
+                {EMAIL_FIELDS.map(([key, placeholder]) => (
+                  <input
+                    key={key}
+                    type="email"
+                    value={editForm[key]}
+                    onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
+                    placeholder={placeholder}
+                    required
+                  />
+                ))}
                 <div className="edit-form-actions">
                   <button type="submit" disabled={isSaving} className="save-profile-btn">
                     {isSaving ? 'Alterando...' : 'Alterar e-mail'}
@@ -239,18 +254,12 @@ export default function Perfil() {
           <div className="confirmados-list">
             {futureEvents.length > 0 ? (
               futureEvents.map(evento => (
-                <div
+                <EventoItem
                   key={evento.id}
-                  className="confirmado-item clickable-item"
+                  evento={evento}
                   onClick={() => handleVerDetalhes(evento)}
                   title="Ver Detalhes do Evento"
-                >
-                  <div className="confirmado-dot"></div>
-                  <div className="confirmado-info">
-                    <h4>{evento.nome}</h4>
-                    <p>{evento.horario}</p>
-                  </div>
-                </div>
+                />
               ))
             ) : (
               <p className="no-data">Nenhum evento futuro confirmado.</p>
@@ -277,27 +286,16 @@ export default function Perfil() {
             </button>
           ) : (
             <form onSubmit={handlePasswordSubmit} className="edit-profile-form">
-              <input
-                type="password"
-                value={passwordForm.senhaAtual}
-                onChange={(e) => setPasswordForm({ ...passwordForm, senhaAtual: e.target.value })}
-                placeholder="Senha Atual"
-                required
-              />
-              <input
-                type="password"
-                value={passwordForm.novaSenha}
-                onChange={(e) => setPasswordForm({ ...passwordForm, novaSenha: e.target.value })}
-                placeholder="Nova Senha"
-                required
-              />
-              <input
-                type="password"
-                value={passwordForm.repetirSenha}
-                onChange={(e) => setPasswordForm({ ...passwordForm, repetirSenha: e.target.value })}
-                placeholder="Repetir Nova Senha"
-                required
-              />
+              {PASSWORD_FIELDS.map(([key, placeholder]) => (
+                <input
+                  key={key}
+                  type="password"
+                  value={passwordForm[key]}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, [key]: e.target.value })}
+                  placeholder={placeholder}
+                  required
+                />
+              ))}
               <div className="edit-form-actions" style={{ marginTop: '4px' }}>
                 <button type="submit" disabled={isSavingPassword || !passwordForm.novaSenha} className="save-profile-btn">
                   {isSavingPassword ? 'Atualizando...' : 'Atualizar'}
@@ -329,18 +327,12 @@ export default function Perfil() {
                 <>
                   <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Eventos Futuros</h4>
                   {futureEvents.map(evento => (
-                    <div
+                    <EventoItem
                       key={evento.id}
-                      className="confirmado-item clickable-item"
+                      evento={evento}
                       style={{ marginBottom: '8px' }}
-                      onClick={() => { setShowHistory(false); handleVerDetalhes(evento); }}
-                    >
-                      <div className="confirmado-dot"></div>
-                      <div className="confirmado-info">
-                        <h4>{evento.nome}</h4>
-                        <p>{evento.horario}</p>
-                      </div>
-                    </div>
+                      onClick={() => openFromHistory(evento)}
+                    />
                   ))}
                   <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
                 </>
@@ -349,18 +341,13 @@ export default function Perfil() {
               <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Eventos Passados</h4>
               {pastEvents.length > 0 ? (
                 pastEvents.map(evento => (
-                  <div
+                  <EventoItem
                     key={evento.id}
-                    className="confirmado-item clickable-item"
+                    evento={evento}
                     style={{ marginBottom: '8px', opacity: 0.7 }}
-                    onClick={() => { setShowHistory(false); handleVerDetalhes(evento); }}
-                  >
-                    <div className="confirmado-dot" style={{ background: '#9ca3af' }}></div>
-                    <div className="confirmado-info">
-                      <h4>{evento.nome}</h4>
-                      <p>{evento.horario}</p>
-                    </div>
-                  </div>
+                    dotStyle={{ background: '#9ca3af' }}
+                    onClick={() => openFromHistory(evento)}
+                  />
                 ))
               ) : (
                 <p className="no-data" style={{ fontSize: '14px', marginTop: '4px' }}>Nenhum evento passado.</p>

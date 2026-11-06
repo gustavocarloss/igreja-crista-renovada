@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, createContext, useContext, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, authService, eventService, attendanceService } from '../services/api'
-import { mapEventRow, eventToRow } from '../utils/events'
+import { supabase, authService, eventService, attendanceService, OPENED_FROM_RECOVERY_LINK } from '../services/api'
+import { mapEventRow, eventToRow, getEventStatus } from '../utils/events'
+import { isValidEmail } from '../utils/validation'
 import { friendlyError, isConnectivityProblem } from '../utils/errors'
 import { safeAvatar } from '../utils/image'
 
@@ -48,11 +49,11 @@ export function AppProvider({ children }) {
   const [authReady, setAuthReady] = useState(false)
   const [authError, setAuthError] = useState(null)
   const [authPage, setAuthPage] = useState('login')
+  const [passwordRecovery, setPasswordRecovery] = useState(OPENED_FROM_RECOVERY_LINK)
 
   // --- Dados ---
   const [eventos, setEventos] = useState([])
   const [eventosLoaded, setEventosLoaded] = useState(false)
-  const [eventosLoading, setEventosLoading] = useState(false)
   const [eventosError, setEventosError] = useState(null)
 
   // --- Modal global de mensagens ---
@@ -68,10 +69,6 @@ export function AppProvider({ children }) {
   const profilePromisesRef = useRef(new Map()) // evita buscar o mesmo perfil 2x em paralelo
   const registeringRef = useRef(false) // durante o cadastro, quem carrega o perfil é o handleRegister
   const lastEventsLoadRef = useRef(0)
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'light')
-  }, [])
 
   // ---------- Modal ----------
   const showMessage = useCallback((message, type = 'error') => {
@@ -176,6 +173,8 @@ export function AppProvider({ children }) {
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
+      // A sessão do link de recuperação é carregada pelo restore(); aqui só ligamos a tela de nova senha.
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
       if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') return
       if (event === 'INITIAL_SESSION') return // tratado pelo restore() abaixo
       // Não fazemos chamadas ao Supabase dentro do callback (evita deadlock); adiamos um tick.
@@ -183,7 +182,8 @@ export function AppProvider({ children }) {
     })
 
     const restore = async () => {
-      if (shouldDropSession()) {
+      // O link de recuperação abre numa aba nova: sem essa exceção o "Lembrar de mim" desligado apagaria a sessão dele.
+      if (!OPENED_FROM_RECOVERY_LINK && shouldDropSession()) {
         // Usuário não marcou "Lembrar de mim" e o navegador foi fechado: começa deslogado.
         await authService.signOut().catch(() => {})
         return { data: { session: null } }
@@ -208,7 +208,6 @@ export function AppProvider({ children }) {
 
   // ---------- Eventos ----------
   const loadEvents = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setEventosLoading(true)
     try {
       const rows = await eventService.fetchEvents()
       setEventos(rows.map(mapEventRow))
@@ -219,8 +218,6 @@ export function AppProvider({ children }) {
       console.error('Erro ao carregar eventos', err)
       // Em atualização silenciosa mantemos a lista antiga; só avisamos quando não há nada para mostrar.
       if (!silent) setEventosError(friendlyError(err, 'Não foi possível carregar os eventos.'))
-    } finally {
-      setEventosLoading(false)
     }
   }, [])
 
@@ -292,99 +289,130 @@ export function AppProvider({ children }) {
     }
     loadedAuthIdRef.current = null
     setUser(null)
+    setPasswordRecovery(false)
     setAuthPage('login')
     navigate('/')
   }
 
-  // ---------- Presença ----------
-  const confirmarPresenca = async (eventoId) => {
+  /** Executa uma ação do usuário e mostra o aviso de sucesso ou o erro amigável. */
+  const runAction = async (action, success, failure) => {
     try {
-      await attendanceService.confirmPresence(user.id, eventoId)
-      setUser((prev) =>
-        prev && !prev.eventosConfirmados.some((id) => String(id) === String(eventoId))
-          ? { ...prev, eventosConfirmados: [...prev.eventosConfirmados, eventoId] }
-          : prev
-      )
-      showMessage('Presença confirmada com sucesso!', 'success')
+      await action()
+      showMessage(success, 'success')
       return true
     } catch (err) {
       console.error(err)
-      showMessage(friendlyError(err, 'Não foi possível confirmar sua presença. Tente novamente.'))
+      showMessage(friendlyError(err, failure))
       return false
     }
   }
 
-  const cancelarPresenca = async (eventoId) => {
-    try {
-      await attendanceService.cancelPresence(user.id, eventoId)
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              eventosConfirmados: prev.eventosConfirmados.filter((id) => String(id) !== String(eventoId))
-            }
-          : prev
-      )
-      showMessage('Presença cancelada com sucesso!', 'success')
-      return true
-    } catch (err) {
-      console.error(err)
-      showMessage(friendlyError(err, 'Não foi possível cancelar sua presença. Tente novamente.'))
-      return false
+  // ---------- Esqueci minha senha ----------
+  const handleForgotPassword = async (email) => {
+    if (!isValidEmail(email)) {
+      showMessage('Digite seu e-mail no campo acima e toque em "Esqueci minha senha" novamente.')
+      return
     }
+    await runAction(
+      () => authService.sendPasswordReset(email.trim()),
+      'Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha. Verifique também o spam.',
+      'Não foi possível enviar o e-mail de recuperação. Tente novamente.'
+    )
   }
+
+  const salvarNovaSenha = (novaSenha) =>
+    runAction(
+      async () => {
+        await authService.updateAuthPassword(novaSenha)
+        setPasswordRecovery(false)
+        navigate('/', { replace: true })
+      },
+      'Senha alterada com sucesso!',
+      'Não foi possível alterar a senha.'
+    )
+
+  // ---------- Presença ----------
+  const confirmarPresenca = (eventoId) =>
+    runAction(
+      async () => {
+        await attendanceService.confirmPresence(user.id, eventoId)
+        setUser((prev) =>
+          prev && !prev.eventosConfirmados.some((id) => String(id) === String(eventoId))
+            ? { ...prev, eventosConfirmados: [...prev.eventosConfirmados, eventoId] }
+            : prev
+        )
+      },
+      'Presença confirmada com sucesso!',
+      'Não foi possível confirmar sua presença. Tente novamente.'
+    )
+
+  const cancelarPresenca = (eventoId) =>
+    runAction(
+      async () => {
+        await attendanceService.cancelPresence(user.id, eventoId)
+        setUser((prev) =>
+          prev
+            ? { ...prev, eventosConfirmados: prev.eventosConfirmados.filter((id) => String(id) !== String(eventoId)) }
+            : prev
+        )
+      },
+      'Presença cancelada com sucesso!',
+      'Não foi possível cancelar sua presença. Tente novamente.'
+    )
 
   // ---------- Perfil ----------
-  const atualizarAvatar = async (dataUrl) => {
-    try {
-      await authService.updateUser(user.id, { avatar_url: dataUrl })
-      setUser((prev) => (prev ? { ...prev, avatar_url: dataUrl } : prev))
-      showMessage('Foto de perfil atualizada com sucesso!', 'success')
-    } catch (err) {
-      showMessage(friendlyError(err, 'Não foi possível atualizar a foto de perfil.'))
-    }
-  }
+  const atualizarAvatar = (dataUrl) =>
+    runAction(
+      async () => {
+        await authService.updateUser(user.id, { avatar_url: dataUrl })
+        setUser((prev) => (prev ? { ...prev, avatar_url: dataUrl } : prev))
+      },
+      'Foto de perfil atualizada com sucesso!',
+      'Não foi possível atualizar a foto de perfil.'
+    )
 
   // ---------- Eventos (admin) ----------
-  const adicionarEvento = async (novoEvento) => {
-    try {
-      const data = await eventService.addEvent(eventToRow(novoEvento))
-      if (!data?.[0]) throw new Error('permission denied')
-      setEventos((prev) => [...prev, mapEventRow(data[0])])
-      showMessage('Evento adicionado com sucesso!', 'success')
-      return true
-    } catch (err) {
-      showMessage(friendlyError(err, 'Não foi possível adicionar o evento.'))
-      return false
-    }
+  /** Insert/update sem linha de volta = o RLS bloqueou. */
+  const firstRow = (data) => {
+    if (!data?.[0]) throw new Error('permission denied')
+    return mapEventRow(data[0])
   }
 
-  const atualizarEvento = async (eventoAtualizado) => {
-    try {
-      const data = await eventService.updateEvent(eventoAtualizado.id, eventToRow(eventoAtualizado))
-      if (!data?.[0]) throw new Error('permission denied')
-      const mapped = mapEventRow(data[0])
-      setEventos((prev) => prev.map((e) => (e.id === mapped.id ? mapped : e)))
-      showMessage('Evento atualizado com sucesso!', 'success')
-      return true
-    } catch (err) {
-      showMessage(friendlyError(err, 'Não foi possível atualizar o evento.'))
-      return false
-    }
-  }
+  const adicionarEvento = (novoEvento) =>
+    runAction(
+      async () => {
+        const mapped = firstRow(await eventService.addEvent(eventToRow(novoEvento)))
+        setEventos((prev) => [...prev, mapped])
+      },
+      'Evento adicionado com sucesso!',
+      'Não foi possível adicionar o evento.'
+    )
+
+  const atualizarEvento = (eventoAtualizado) =>
+    runAction(
+      async () => {
+        const mapped = firstRow(await eventService.updateEvent(eventoAtualizado.id, eventToRow(eventoAtualizado)))
+        setEventos((prev) => prev.map((e) => (e.id === mapped.id ? mapped : e)))
+      },
+      'Evento atualizado com sucesso!',
+      'Não foi possível atualizar o evento.'
+    )
 
   const excluirEvento = async (id) => {
-    const confirmed = await confirmAsync('Tem certeza que deseja excluir este evento?')
-    if (!confirmed) return false
-    try {
-      await eventService.deleteEvent(id)
-      setEventos((prev) => prev.filter((e) => e.id !== id))
-      showMessage('Evento excluído com sucesso!', 'success')
-      return true
-    } catch (err) {
-      showMessage(friendlyError(err, 'Não foi possível excluir o evento.'))
+    const evento = eventos.find((e) => e.id === id)
+    if (evento && getEventStatus(evento.raw_date) === 'past') {
+      showMessage('Eventos que já aconteceram não podem ser excluídos.')
       return false
     }
+    if (!(await confirmAsync('Tem certeza que deseja excluir este evento?'))) return false
+    return runAction(
+      async () => {
+        await eventService.deleteEvent(id)
+        setEventos((prev) => prev.filter((e) => e.id !== id))
+      },
+      'Evento excluído com sucesso!',
+      'Não foi possível excluir o evento.'
+    )
   }
 
   const contextValue = {
@@ -396,7 +424,6 @@ export function AppProvider({ children }) {
     setAuthPage,
     eventos,
     eventosLoaded,
-    eventosLoading,
     eventosError,
     reloadEvents: loadEvents,
     confirmarPresenca,
@@ -408,6 +435,9 @@ export function AppProvider({ children }) {
     handleLogin,
     handleRegister,
     handleLogout,
+    handleForgotPassword,
+    passwordRecovery,
+    salvarNovaSenha,
     modalConfig,
     closeModal,
     showMessage,

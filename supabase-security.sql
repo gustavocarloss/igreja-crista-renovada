@@ -146,7 +146,10 @@ create policy "meeting_admin_insert" on public.meeting
 create policy "meeting_admin_update" on public.meeting
   for update to authenticated using (public.is_admin()) with check (public.is_admin());
 create policy "meeting_admin_delete" on public.meeting
-  for delete to authenticated using (public.is_admin());
+  -- Evento que já passou (encerrado há mais de 2h, mesma regra do app) não pode ser excluído.
+  for delete to authenticated using (
+    public.is_admin() and (meeting_date is null or meeting_date > now() - interval '2 hours')
+  );
 
 -- Link de transmissão: só http(s). NOT VALID = não confere eventos antigos.
 alter table public.meeting drop constraint if exists meeting_link_http;

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { LIVROS_BIBLIA } from './constants'
 import { verseToPlainText } from '../../utils/sanitize'
+import useBackHandler, { armBackTrap } from '../../hooks/useBackHandler'
+import TopHeader from '../common/TopHeader/TopHeader'
 import './Biblia.css'
 
 /**
  * Componente que exibe a Bíblia Digital com busca, seleção de capítulos e leitura de versículos.
  */
 export default function Biblia() {
-  const [livros] = useState(LIVROS_BIBLIA)
   const [livroSelecionado, setLivroSelecionado] = useState(null)
   const [capituloSelecionado, setCapituloSelecionado] = useState(null)
   const [versiculos, setVersiculos] = useState([])
@@ -27,7 +28,7 @@ export default function Biblia() {
     setLoading(true)
     setErro('')
     try {
-      const bookId = livros.findIndex(l => l.id === livroSelecionado.id) + 1
+      const bookId = LIVROS_BIBLIA.findIndex(l => l.id === livroSelecionado.id) + 1
 
       // Usando a API Bolls Life com a tradução NVT
       const res = await fetch(`https://bolls.life/get-chapter/NVT/${bookId}/${capitulo}/`)
@@ -53,6 +54,12 @@ export default function Biblia() {
     }
   }
 
+  // Capítulos/leitura são telas "filhas": o voltar do celular sobe um nível em vez de perguntar se quer sair.
+  useBackHandler(!!livroSelecionado, () => {
+    handleVoltar()
+    armBackTrap()
+  })
+
   // RENDERIZAÇÃO: NÍVEL 3 (LEITURA DE VERSÍCULOS)
   if (livroSelecionado && capituloSelecionado) {
     const isFirstChapter = capituloSelecionado === 1
@@ -60,10 +67,7 @@ export default function Biblia() {
 
     return (
       <div className="page leitura-page">
-        <div className="top-header-bar">
-          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-          <span className="header-title">Igreja Cristã Renovada</span>
-        </div>
+        <TopHeader />
         <header className="page-header">
           <button onClick={handleVoltar} className="back-btn" aria-label="Voltar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -136,10 +140,7 @@ export default function Biblia() {
 
     return (
       <div className="page">
-        <div className="top-header-bar">
-          <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-          <span className="header-title">Igreja Cristã Renovada</span>
-        </div>
+        <TopHeader />
         <header className="page-header">
           <button onClick={handleVoltar} className="back-btn" aria-label="Voltar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -169,8 +170,8 @@ export default function Biblia() {
   // RENDERIZAÇÃO: NÍVEL 1 (PASTAS DOS TESTAMENTOS + LIVROS)
   const termo = busca.trim().toLowerCase()
   const testamentos = [
-    { id: 'at', nome: 'Antigo Testamento', livros: livros.slice(0, 39) },
-    { id: 'nt', nome: 'Novo Testamento', livros: livros.slice(39) }
+    { id: 'at', nome: 'Antigo Testamento', livros: LIVROS_BIBLIA.slice(0, 39) },
+    { id: 'nt', nome: 'Novo Testamento', livros: LIVROS_BIBLIA.slice(39) }
   ].map(t => ({
     ...t,
     filtrados: termo ? t.livros.filter(l => l.name.toLowerCase().includes(termo)) : t.livros
@@ -179,10 +180,7 @@ export default function Biblia() {
 
   return (
     <div className="page">
-      <div className="top-header-bar">
-        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-        <span className="header-title">Igreja Cristã Renovada</span>
-      </div>
+      <TopHeader />
       <header className="page-header">
         <h1>Bíblia Sagrada</h1>
       </header>

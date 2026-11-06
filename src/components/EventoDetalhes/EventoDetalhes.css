@@ -104,50 +104,11 @@
   text-align: center;
 }
 
-.maps-link {
-  display: inline-flex;
-  margin-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary-navy);
-  text-decoration: underline;
-}
 
-.maps-link:hover {
-  color: var(--primary-navy);
-}
 
-.presenca-confirmada-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
 
-.presenca-confirmada-texto {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--success);
-}
 
-.cancelar-presenca-link {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 4px;
-}
 
-.cancelar-presenca-link:hover {
-  color: #b91c1c;
-}
 
 .cancelar-presenca-btn-full {
   width: 100%;
@@ -197,9 +158,6 @@
   margin-top: 12px;
 }
 
-.check-icon {
-  margin-right: 8px;
-}
 
 .attendees-section {
   margin-top: 28px;
@@ -217,39 +175,8 @@
   letter-spacing: 0.05em;
 }
 
-.attendees-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
 
-.attendee-badge {
-  background: var(--accent-soft);
-  color: var(--text-main);
-  padding: 6px 12px 6px 6px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.attendee-avatar-mini {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary-navy);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  background-size: cover;
-  background-position: center;
-}
 
 .no-attendees {
   font-size: 14px;

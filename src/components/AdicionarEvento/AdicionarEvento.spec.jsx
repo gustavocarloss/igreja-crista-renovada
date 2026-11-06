@@ -38,7 +38,8 @@ const fillForm = ({ nome = 'Culto de Jovens', local = 'Auditório Principal', da
   fireEvent.change(screen.getByPlaceholderText(/nome do evento/i), { target: { value: nome } })
   fireEvent.change(screen.getByLabelText(/local do evento/i), { target: { value: local } })
   fireEvent.change(screen.getByLabelText(/data do evento/i), { target: { value: data } })
-  fireEvent.change(screen.getByLabelText(/horário/i), { target: { value: hora } })
+  fireEvent.change(screen.getByLabelText(/horário/i), { target: { value: hora.split(':')[0] } })
+  fireEvent.change(screen.getByLabelText(/minutos/i), { target: { value: hora.split(':')[1] } })
   if (link !== undefined) fireEvent.change(screen.getByLabelText(/link de transmissão/i), { target: { value: link } })
 }
 

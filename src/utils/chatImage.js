@@ -11,11 +11,11 @@
  * 4. Na exibição, só aceitamos data URLs `data:image/jpeg;base64,...` (ver isSafeChatImage).
  */
 
-export const MAX_CHAT_IMAGE_INPUT_BYTES = 5 * 1024 * 1024
+const MAX_CHAT_IMAGE_INPUT_BYTES = 5 * 1024 * 1024
 const MAX_SIDE = 1024
 const JPEG_QUALITY = 0.8
 /** Limite do resultado final (o banco guarda o texto base64). */
-export const MAX_CHAT_IMAGE_OUTPUT_CHARS = 700 * 1024
+const MAX_CHAT_IMAGE_OUTPUT_CHARS = 700 * 1024
 
 const SIGNATURES = [
   { type: 'jpeg', bytes: [0xff, 0xd8, 0xff] },
@@ -43,30 +43,43 @@ export function isSafeChatImage(value) {
 }
 
 /**
- * Valida e higieniza uma imagem escolhida pelo usuário.
- * @param {File} file
- * @returns {Promise<string>} data URL JPEG limpa
+ * Confere tamanho e formato real (magic bytes) do arquivo, carrega a imagem e entrega para `draw`.
+ * A URL temporária é sempre liberada no fim.
  */
-export async function sanitizeChatImage(file) {
-  if (!file) throw new Error('Nenhuma imagem selecionada.')
-  if (file.size > MAX_CHAT_IMAGE_INPUT_BYTES) {
-    throw new Error('A imagem é muito grande. Envie uma foto de até 5 MB.')
-  }
+export async function withCheckedImage(file, maxBytes, msgs, draw) {
+  if (!file) throw new Error(msgs.missing)
+  if (file.size > maxBytes) throw new Error(msgs.tooBig)
 
   const header = new Uint8Array(await file.slice(0, 16).arrayBuffer())
-  if (!detectImageType(header)) {
-    throw new Error('Arquivo não permitido. Envie apenas fotos (JPG, PNG, GIF ou WEBP).')
-  }
+  if (!detectImageType(header)) throw new Error(msgs.notAllowed)
 
   const objectUrl = URL.createObjectURL(file)
   try {
     const img = await new Promise((resolve, reject) => {
       const el = new Image()
       el.onload = () => resolve(el)
-      el.onerror = () => reject(new Error('Não foi possível ler a imagem. O arquivo pode estar corrompido.'))
+      el.onerror = () => reject(new Error(msgs.unreadable))
       el.src = objectUrl
     })
+    return draw(img)
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
 
+/**
+ * Valida e higieniza uma imagem escolhida pelo usuário.
+ * @param {File} file
+ * @returns {Promise<string>} data URL JPEG limpa
+ */
+export function sanitizeChatImage(file) {
+  const msgs = {
+    missing: 'Nenhuma imagem selecionada.',
+    tooBig: 'A imagem é muito grande. Envie uma foto de até 5 MB.',
+    notAllowed: 'Arquivo não permitido. Envie apenas fotos (JPG, PNG, GIF ou WEBP).',
+    unreadable: 'Não foi possível ler a imagem. O arquivo pode estar corrompido.'
+  }
+  return withCheckedImage(file, MAX_CHAT_IMAGE_INPUT_BYTES, msgs, (img) => {
     if (!img.naturalWidth || !img.naturalHeight) {
       throw new Error('Imagem inválida.')
     }
@@ -93,7 +106,5 @@ export async function sanitizeChatImage(file) {
       throw new Error('Não foi possível preparar a imagem para envio.')
     }
     return dataUrl
-  } finally {
-    URL.revokeObjectURL(objectUrl)
-  }
+  })
 }

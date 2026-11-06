@@ -10,10 +10,6 @@ export default function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleNavClick = (item) => {
-    navigate(item.path)
-  }
-
   const navItems = [
     {
       id: 'home',
@@ -59,7 +55,7 @@ export default function BottomNav() {
             key={item.id}
             className={`nav-item ${isActive ? 'active' : ''}`}
             aria-current={isActive ? 'page' : undefined}
-            onClick={() => handleNavClick(item)}
+            onClick={() => navigate(item.path)}
           >
             <span className="nav-icon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>

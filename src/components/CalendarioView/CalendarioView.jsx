@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 import { getEventStatus } from '../../utils/events'
+import TopHeader from '../common/TopHeader/TopHeader'
 import './CalendarioView.css'
 
 /**
@@ -20,26 +21,18 @@ export default function CalendarioView() {
     return () => document.removeEventListener('keydown', onKey)
   }, [selectedDay])
 
-  const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate()
-  const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay()
-
   const month = currentMonth.getMonth()
   const year = currentMonth.getFullYear()
-  const days = daysInMonth(month, year)
-  const firstDay = firstDayOfMonth(month, year)
+  const days = new Date(year, month + 1, 0).getDate()
+  const firstDay = new Date(year, month, 1).getDay()
+  const today = new Date()
 
   const monthNames = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ]
 
-  const calendarDays = []
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.push(null)
-  }
-  for (let i = 1; i <= days; i++) {
-    calendarDays.push(i)
-  }
+  const calendarDays = [...Array(firstDay).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)]
 
   const getEventsForDay = (day) => {
     if (!day) return []
@@ -77,10 +70,7 @@ export default function CalendarioView() {
 
   return (
     <div className="page">
-      <div className="top-header-bar">
-        <img src={`${import.meta.env.BASE_URL}icr-logo.png`} alt="ICR Logo" className="header-logo" />
-        <span className="header-title">Igreja Cristã Renovada</span>
-      </div>
+      <TopHeader />
       <header className="page-header">
         <h1>Agenda Mensal</h1>
       </header>
@@ -103,8 +93,7 @@ export default function CalendarioView() {
           {calendarDays.map((day, idx) => {
             const dayEvents = getEventsForDay(day)
             const hasEvents = dayEvents.length > 0
-            const today = new Date();
-            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
 
             return (
               <div

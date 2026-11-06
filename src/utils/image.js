@@ -1,7 +1,7 @@
 /**
  * Utilitários de imagem de perfil.
  */
-import { detectImageType } from './chatImage'
+import { withCheckedImage } from './chatImage'
 
 const MAX_INPUT_BYTES = 8 * 1024 * 1024
 
@@ -34,28 +34,14 @@ export const safeAvatar = (value) => (isSafeAvatar(value) ? value : null)
  * @param {number} [size=256]
  * @returns {Promise<string>} data URL (image/jpeg)
  */
-export async function resizeImageToDataUrl(file, size = 256) {
-  if (!file) {
-    throw new Error('Selecione um arquivo de imagem válido.')
+export function resizeImageToDataUrl(file, size = 256) {
+  const msgs = {
+    missing: 'Selecione um arquivo de imagem válido.',
+    tooBig: 'A imagem é muito grande. Escolha uma foto de até 8 MB.',
+    notAllowed: 'Arquivo não permitido. Escolha uma foto (JPG, PNG, GIF ou WEBP).',
+    unreadable: 'Não foi possível ler a imagem selecionada.'
   }
-  if (file.size > MAX_INPUT_BYTES) {
-    throw new Error('A imagem é muito grande. Escolha uma foto de até 8 MB.')
-  }
-
-  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer())
-  if (!detectImageType(header)) {
-    throw new Error('Arquivo não permitido. Escolha uma foto (JPG, PNG, GIF ou WEBP).')
-  }
-
-  const objectUrl = URL.createObjectURL(file)
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const el = new Image()
-      el.onload = () => resolve(el)
-      el.onerror = () => reject(new Error('Não foi possível ler a imagem selecionada.'))
-      el.src = objectUrl
-    })
-
+  return withCheckedImage(file, MAX_INPUT_BYTES, msgs, (img) => {
     const side = Math.min(img.naturalWidth, img.naturalHeight)
     if (!side) throw new Error('Imagem inválida.')
     const sx = (img.naturalWidth - side) / 2
@@ -70,7 +56,5 @@ export async function resizeImageToDataUrl(file, size = 256) {
     ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size)
 
     return canvas.toDataURL('image/jpeg', 0.82)
-  } finally {
-    URL.revokeObjectURL(objectUrl)
-  }
+  })
 }
