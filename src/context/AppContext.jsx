@@ -314,9 +314,17 @@ export function AppProvider({ children }) {
       return
     }
     await runAction(
-      () => authService.sendPasswordReset(email.trim()),
+      async () => {
+        try {
+          await authService.sendPasswordReset(email.trim())
+        } catch (err) {
+          // 500 aqui é falha no envio do e-mail (SMTP), não "servidor fora do ar".
+          if (Number(err?.status) >= 500) throw new Error('email send failed')
+          throw err
+        }
+      },
       'Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha. Verifique também o spam.',
-      'Não foi possível enviar o e-mail de recuperação. Tente novamente.'
+      'Não foi possível enviar o e-mail de recuperação agora. Tente novamente mais tarde ou fale com a liderança.'
     )
   }
 

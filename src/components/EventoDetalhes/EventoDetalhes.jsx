@@ -5,6 +5,7 @@ import { attendanceService } from '../../services/api'
 import { getEventStatus } from '../../utils/events'
 import MapPreview from '../common/MapPreview/MapPreview'
 import ChatBoard from '../ChatBoard/ChatBoard'
+import { goBack } from '../../hooks/useBackHandler'
 import LoadingSpinner from '../common/LoadingSpinner/LoadingSpinner'
 import ErrorState from '../common/ErrorState/ErrorState'
 import TopHeader from '../common/TopHeader/TopHeader'
@@ -65,7 +66,7 @@ export default function EventoDetalhes() {
     loadAttendees()
   }, [loadAttendees])
 
-  const goBack = () => navigate(window.history.state?.idx > 0 ? -1 : '/')
+  const handleBack = () => goBack(navigate)
 
   if (!selectedEvent) {
     if (!eventosLoaded) {
@@ -124,7 +125,7 @@ export default function EventoDetalhes() {
     <div className="page">
       <TopHeader />
       <header className="page-header">
-        <button onClick={goBack} className="back-btn" aria-label="Voltar">
+        <button onClick={handleBack} className="back-btn" aria-label="Voltar">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <h1>Detalhes do Evento</h1>

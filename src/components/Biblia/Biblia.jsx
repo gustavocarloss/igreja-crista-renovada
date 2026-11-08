@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LIVROS_BIBLIA } from './constants'
 import { verseToPlainText } from '../../utils/sanitize'
-import useBackHandler, { armBackTrap } from '../../hooks/useBackHandler'
+import useBackHandler from '../../hooks/useBackHandler'
 import TopHeader from '../common/TopHeader/TopHeader'
 import './Biblia.css'
 
@@ -55,10 +55,7 @@ export default function Biblia() {
   }
 
   // Capítulos/leitura são telas "filhas": o voltar do celular sobe um nível em vez de perguntar se quer sair.
-  useBackHandler(!!livroSelecionado, () => {
-    handleVoltar()
-    armBackTrap()
-  })
+  useBackHandler(!!livroSelecionado, handleVoltar)
 
   // RENDERIZAÇÃO: NÍVEL 3 (LEITURA DE VERSÍCULOS)
   if (livroSelecionado && capituloSelecionado) {

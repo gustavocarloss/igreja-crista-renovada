@@ -1,0 +1,130 @@
+.time-picker-field {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 16px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) inset;
+}
+
+.time-picker-field svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.time-picker-field.empty {
+  color: var(--text-muted);
+}
+
+.time-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 34, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.time-sheet {
+  background: var(--bg-card);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -10px 30px rgba(12, 50, 110, 0.2);
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .time-sheet-overlay { align-items: center; padding: 24px; }
+  .time-sheet { border-radius: 24px; }
+}
+
+.time-sheet-preview {
+  text-align: center;
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--primary-navy);
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.time-sheet-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 12px 0 8px;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.time-chip {
+  padding: 10px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.time-chip.selected {
+  background: var(--primary-navy);
+  border-color: var(--primary-navy);
+  color: #fff;
+}
+
+.time-sheet-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.time-sheet-actions button {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.time-btn-cancel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.time-btn-confirm {
+  background: var(--primary-navy);
+  border: none;
+  color: #fff;
+}
+
+.time-btn-confirm:disabled {
+  background: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}

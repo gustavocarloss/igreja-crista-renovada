@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { useAppContext } from './context/AppContext'
 import Login from './components/Login/Login'
 import Registro from './components/Registro/Registro'
@@ -12,7 +12,7 @@ import ErrorState from './components/common/ErrorState/ErrorState'
 import InstallBanner from './components/common/InstallBanner/InstallBanner'
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner'
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha'
-import useBackHandler, { armBackTrap, exitApp } from './hooks/useBackHandler'
+import useBackHandler, { exitApp, goBack, trackNavigation } from './hooks/useBackHandler'
 import './App.css'
 
 // Telas secundárias carregam sob demanda: o primeiro acesso (celular, 4G) baixa menos código.
@@ -55,14 +55,30 @@ function App() {
     confirmAsync
   } = useAppContext()
 
-  useBackHandler(!user || MAIN_PATHS.includes(location.pathname), async () => {
-    if (!user && authPage === 'register') {
-      setAuthPage('login')
-      return armBackTrap()
+  const navigate = useNavigate()
+  const navigationType = useNavigationType()
+  const previousPathRef = useRef(location.pathname)
+
+  useEffect(() => {
+    // Só navegações "para frente" empilham; o goBack() usa replace e não deve empilhar de novo.
+    if (navigationType === 'PUSH') {
+      trackNavigation(location.pathname, previousPathRef.current, MAIN_PATHS.includes(location.pathname))
+    }
+    previousPathRef.current = location.pathname
+  }, [location.pathname, navigationType])
+
+  // Handler "raiz": tela filha volta para a anterior; tela principal (e login) pergunta se quer sair.
+  useBackHandler(true, async () => {
+    if (!user) {
+      if (authPage === 'register') return setAuthPage('login')
+    } else if (!MAIN_PATHS.includes(location.pathname)) {
+      return goBack(navigate)
     }
     if (await confirmAsync('Deseja sair do aplicativo?', { confirmLabel: 'Sim', cancelLabel: 'Não' })) exitApp()
-    else armBackTrap()
   })
+
+  // Com um aviso aberto, o voltar só fecha o aviso (equivale a "Não"/"Entendido").
+  useBackHandler(modalConfig.isOpen, closeModal)
 
   useEffect(() => {
     const timer = setTimeout(() => setMinSplashDone(true), MIN_SPLASH_MS)

@@ -8,12 +8,9 @@ import ErrorState from '../common/ErrorState/ErrorState'
 import { safeHttpUrl } from '../../utils/sanitize'
 import { extractLocalDateAndTime } from '../../utils/date'
 import TopHeader from '../common/TopHeader/TopHeader'
-import useBackHandler, { armBackTrap } from '../../hooks/useBackHandler'
+import TimePicker from '../common/TimePicker/TimePicker'
+import useBackHandler, { goBack } from '../../hooks/useBackHandler'
 import './AdicionarEvento.css'
-
-const pad = (n) => String(n).padStart(2, '0')
-const HOURS = Array.from({ length: 24 }, (_, i) => pad(i))
-const MINUTES = Array.from({ length: 60 }, (_, i) => pad(i))
 
 const EMPTY_EVENT = {
   nome: '',
@@ -69,12 +66,8 @@ export default function AdicionarEvento() {
 
   // "Voltar" do celular com alterações não salvas: pergunta antes de sair do formulário.
   useBackHandler(isDirty, async () => {
-    if (!(await confirmDiscard())) return armBackTrap()
-    navigate(window.history.state?.idx > 0 ? -1 : '/', { replace: true })
+    if (await confirmDiscard()) goBack(navigate)
   })
-
-  const [hh = '', mm = ''] = novoEvento.hora.split(':')
-  const setHora = (h, m) => setNovoEvento({ ...novoEvento, hora: h ? `${h}:${m || '00'}` : '' })
 
   // Preenche o formulário uma única vez com os dados do evento em edição
   useEffect(() => {
@@ -204,18 +197,11 @@ export default function AdicionarEvento() {
           </div>
           <div className="input-group">
             <label htmlFor="event-time">Horário</label>
-            {/* Selects em vez de type="time": o relógio nativo do Android corta o botão "Definir" em alguns aparelhos. */}
-            <div className="time-selects">
-              <select id="event-time" value={hh} onChange={(e) => setHora(e.target.value, mm)} required>
-                <option value="">--</option>
-                {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
-              <span>:</span>
-              <select aria-label="Minutos" value={mm} onChange={(e) => setHora(hh, e.target.value)} disabled={!hh}>
-                {!hh && <option value="">--</option>}
-                {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
+            <TimePicker
+              id="event-time"
+              value={novoEvento.hora}
+              onChange={(hora) => setNovoEvento({ ...novoEvento, hora })}
+            />
           </div>
         </div>
 
